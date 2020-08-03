@@ -1,0 +1,262 @@
+#!/usr/bin/python3
+import os,sys,random,subprocess,datetime,psutil,re,time
+
+ScriptDir = os.path.dirname(os.path.abspath(__file__))
+DirMovies = ScriptDir+"/Movies/"
+
+if len(sys.argv) >1:
+     
+     if sys.argv[1] == "-record":
+          RECMOD = True
+     else:
+          RECMOD = False
+     if sys.argv[1] == "-h" or sys.argv[1] == "--help":
+          print("\n**Sneaver is a script playing random movie from snes games.\n\n**Download a rom put it in its folder inside the Movies directory\n\n**Then launch sneaver ^^\n\n**Use : sneaver -record to play and record a random game .\n\n**Have fun !!\n")
+          print()
+          sys.exit(1)
+     
+else:
+     RECMOD = False
+
+
+def rename(name,srcdir):
+
+  badchar= ["(",")","[","!","]"," ","_","--","'",'"',","]
+
+  mv = False
+  for char in badchar:
+     if char in name:
+          mv = True
+  if mv == True:
+     print("English Mothar Fuckar Do You Speak It ?!\nHave To Rename : ",name)
+     newname = name.replace("(","-").replace(")","-").replace("[","-").replace("!","-").replace("]","").replace(" ","-").replace("_","-").replace("'","-").replace('"',"-").replace(",","-").replace("--","-")
+     newname = newname.replace("--","-")
+     os.rename(srcdir+name,srcdir+newname.replace("--","-"))
+     print("\nNew Name is : ",newname)
+
+
+while True:
+     movfile = None
+     romfile = None
+     insertcoin = True
+
+
+     MovLst = [i for i in os.listdir(DirMovies)]
+     for name in MovLst:
+          rename(name,DirMovies)
+
+     MovLst = [i for i in os.listdir(DirMovies)]
+
+     try:
+          rnd = random.randint(0,len(MovLst)-1)
+          DirChosen = DirMovies+MovLst[rnd]
+     except:
+          print("Can't find anything !!!\nWhere am i ?\nPlease check what's in the Movies Folder ..")
+          sys.exit(0)
+     print("\nSneaver chose to open :",DirChosen)
+     print()
+     files = os.listdir(DirChosen)
+
+     for name in files:
+          rename(name,DirChosen+"/")
+
+     files = os.listdir(DirChosen)
+
+     movfiles = []
+     romfiles = []
+
+     for i in files:
+          if i.endswith(".smc"):
+               romfiles.append(i)
+          if i.endswith(".sfc"):
+               romfiles.append(i)
+          if i.endswith(".avi"):
+#               movfiles.append(i)
+                os.remove(DirChosen+"/"+i)
+          if i.endswith(".mkv"):
+#               movfiles.append(i)
+                os.remove(DirChosen+"/"+i)
+          if i.endswith(".mp4"):
+               movfiles.append(i)
+     try:
+          rnd = random.randint(0,len(movfiles)-1)
+          movfile = movfiles[rnd]
+     except:
+          pass
+
+     try:
+          rnd = random.randint(0,len(romfiles)-1)
+          romfile = romfiles[rnd]
+     except:
+          pass
+
+
+     if movfile and RECMOD == False:
+
+       cmd = "cvlc --fullscreen --play-and-exit "+ str(DirChosen)+ "/"  +str(movfile)
+
+       print("\nLaunching : \n",cmd)
+
+       cvlc = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+       output,error = cvlc.communicate()
+       cout= output.decode()
+
+       if "filesystem access error:" in cout:
+                    print("!!!!!!!!!!!\nError while Trying to Opening File!!\n!!!!!!!!!!!\n")
+                    insertcoin = False
+                    cvlc.terminate()
+                    insertcoin = True
+
+     else:
+
+          if movfile == None:
+               print("!!!!!\nHavn't found any movie files ..\n!!!!!!")
+               insertcoin = True
+               break
+          if romfile == None:
+               print("!!!!!\nHavn't found any rom files ..\n!!!!!")
+               insertcoin = False
+               break
+          if RECMOD == True and romfile != None:
+               print("!!!!!\nRECMOD Activated .\n!!!!!")
+               break
+
+
+if insertcoin == True:
+
+  if RECMOD == False:
+#     credit = input("\n!!!!!!!!!!No Movie Has Been Found!!!!!!!!!!!!\nWould you like to save your own movie ?\nYou may need to edit sneaver.conf according to your controller device.\nEscape Key to quit recording or press left or right analog joystick button.\n\nType 'yes' or anything else to quit :")
+#     if credit == "yes":
+     print("\n!!!!!!!!!!No Movie Has Been Found!!!!!!!!!!!!\nRecording new movie Have Fun !\n")
+     if 1 == 1:
+          RECMOD = True
+     else:
+          sys.exit(0)
+
+  if RECMOD == True:
+
+         xrandr = subprocess.Popen("xrandr",shell=True,stdout=subprocess.PIPE)
+         xout = str(xrandr.communicate()[0])
+         reslist = []
+         newres = ""
+         goodone = False
+
+         if "connected primary" in xout:
+              device = str(xout.split("connected primary")[0].split("\\n")[-1]).replace(" ","")
+              xit = "".join(xout.split("connected primary")[1]).split("\\n")
+
+         for item in xit:
+              if item.startswith(" ")== True :
+
+                   if "(" not in item:
+     
+                        if "*" in item:
+                             tmp = item.split("x")
+                             height = tmp[0]
+                             width = tmp[1].split(" ")[0]
+                             res = str(str(height)+"x"+str(width)).replace(" ","")
+                        else:
+
+                             if "640x480" in item:
+                                  newscreen = "xrandr --output "+device+" --mode 640x480"
+                                  newres = "640x480"
+                                  goodone = True
+                             else:
+                                  regex = re.compile(r'\d+[x]\d+')
+                                  bingo =regex.search(item)
+
+                                  if bingo:
+                                       if not bingo.group() in reslist:
+                                            reslist.append(bingo.group())
+              else:
+                   break
+
+         if goodone == False:
+              sorting =[]
+              for resolution in reslist:
+                   tmp = resolution.split("x")[0]
+                   sorting.append(tmp)
+              sorting.sort(key=int)
+              minwidth = sorting[0]
+
+              for resolution in reslist:
+                   if resolution.startswith(minwidth) == True:
+                        newscreen = "xrandr --output "+device+" --mode "+ str(resolution)
+                        newres = str(resolution)
+                        break
+
+             
+         print("\n-Saving Current Screen Config-\n")
+         oldscreen = "xrandr --output "+device+" --mode "+res
+         print(oldscreen)
+
+         print("\n-Changing Screen Resolution now-\n")
+         print(newscreen)
+         print()
+
+         xrandr = subprocess.Popen(str(newscreen),shell=True)
+
+#
+         newmovie =str(datetime.datetime.now().strftime("%y-%m-%d-%H-%M"))+".mkv"
+         print("\n-Recording now-\n",newmovie)
+
+         cmd = "/usr/bin/padsp snes9x -nostdconf -conf "+ str(ScriptDir)+"/sneaver.conf -maxaspect -fullscreen -xvideo "+ str(DirChosen)+ "/" + str(romfile)
+
+         print("\n-Launching Snes9x-\n",cmd)
+
+         sneaver = subprocess.Popen(cmd,shell=True)
+#
+         cmd = "padsp ffmpeg -loglevel error -f alsa -ac 1 -ar 32000 -i pulse -f x11grab -r 24 -s "+str(newres)+" -i :0.0 -acodec pcm_s16le -vcodec libx264 -preset ultrafast -crf 0 -threads 0 "+str(DirChosen)+"/"+str(newmovie)
+         print("\n-Recording Screen-\n",cmd)
+
+         ffmpeg = subprocess.Popen(cmd,shell=True)
+
+         checksneaver= [p.info for p in psutil.process_iter(attrs=['pid', 'name']) if 'snes9x' in p.info['name']]
+         while len(checksneaver) > 0:
+               time.sleep(1)
+               checksneaver= [p.info for p in psutil.process_iter(attrs=['pid', 'name']) if 'snes9x' in p.info['name']]
+          
+         pkill = subprocess.Popen("pkill ffmpeg",shell=True)
+
+         checkffmpeg= [p.info for p in psutil.process_iter(attrs=['pid', 'name']) if 'ffmpeg' in p.info['name']]
+         while len(checkffmpeg) > 0:
+               time.sleep(1)
+               checkffmpeg= [p.info for p in psutil.process_iter(attrs=['pid', 'name']) if 'ffmpeg' in p.info['name']]
+
+         time.sleep(1)
+
+         print("\n-Your game session has been recorded with success !-\n")
+
+         print("\n-Changing back Screen Resolution-\n",oldscreen)
+         xrandr = subprocess.Popen(str(oldscreen),shell=True)
+          
+         print("\n-Now let's encode the video to save some disk space..-\n")
+         cmd ="ffmpeg -i "+str(DirChosen)+"/"+str(newmovie)+" -acodec libvorbis -ab 128k -ac 2 -vcodec libx264 -preset superfast -crf 32 -maxrate 400k -bufsize 400k -threads 0 "+str(DirChosen)+"/"+str(newmovie).replace(".mkv",".mp4")
+         #os.system(cmd)
+         ffmpeg = subprocess.Popen(cmd,shell=True)
+
+         checkffmpeg= [p.info for p in psutil.process_iter(attrs=['pid', 'name']) if 'ffmpeg' in p.info['name']]
+         while len(checkffmpeg) > 0:
+               time.sleep(1)
+               checkffmpeg= [p.info for p in psutil.process_iter(attrs=['pid', 'name']) if 'ffmpeg' in p.info['name']]
+
+         time.sleep(1)
+
+         checkffmpeg= [p.info for p in psutil.process_iter(attrs=['pid', 'name']) if 'ffmpeg' in p.info['name']]
+         while len(checkffmpeg) > 0:
+               time.sleep(1)
+               checkffmpeg= [p.info for p in psutil.process_iter(attrs=['pid', 'name']) if 'ffmpeg' in p.info['name']]
+
+
+         print("\n-Finished-\n")
+         print("\n-Done Encoding %s -\n-Removing old %s-\n\n"%(str(newmovie).replace(".mkv",".mp4"),str(newmovie)))
+         os.remove(str(DirChosen)+"/"+str(newmovie))
+else:
+     print("\n\t\t==Sneaver exited==\n\n")
+     sys.exit(1)
+
+
+
+
+print("\n\t\t==Sneaver exited==\n\n")
+sys.exit(1)

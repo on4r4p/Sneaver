@@ -1,0 +1,61 @@
+#!/usr/bin/python3
+import psutil,subprocess
+from Xlib import X, display
+from Xlib.ext import randr
+
+#checkproc= [p.info for p in psutil.process_iter(attrs=['pid', 'name']) if 'snes9x' in p.info['name']]
+
+#while len(checkproc) > 0:
+#     checkproc= [p.info for p in psutil.process_iter(attrs=['pid', 'name']) if 'snes9x' in p.info['name']]
+
+#print("\nSnes9x exited")
+
+
+sneaver = subprocess.Popen("xrandr",shell=True,stdout=subprocess.PIPE)
+snout = sneaver.communicate()[0]
+snout = str(snout)
+goodone = False
+brk = False
+devlis = ["LVDS","HDMI","VGA","SCART","GVIF","DVI","SDI"]
+
+if "connected primary" in snout:
+     device = str(snout.split("connected primary")[0].split("\\n")[-1]).replace(" ","")
+     snit = "".join(snout.split("connected primary")[1]).split("\\n")
+
+for item in snit:
+
+     if "*" in item:
+          item = item.split("x")
+          height = item[0]
+          width = item[1].split(" ")[0]
+          res = str(str(height)+"x"+str(width)).replace(" ","")
+
+     if "640x480" in item:
+          newscreen = "xrandr --output "+device+" --mode 640x480"
+          goodone = True
+     if 
+
+if goodone == False:
+
+     print()
+print("--Backing up Current Screen Config ==")
+oldscreen = "xrandr --output "+device+" --mode "+res
+print(oldscreen)
+
+print("--Changing Screen Resolution now--")
+print(newscreen)
+print()
+
+print("Now Using Xlib :")
+
+d = display.Display()
+s = d.screen()
+window = s.root.create_window(0, 0, 1, 1, 1, s.root_depth)
+
+res = randr.get_screen_resources(window)
+for mode in res.modes:
+    w, h = mode.width, mode.height
+    print("Width: {}, height: {}".format(w, h))
+
+print("\nFull :")
+print(res)

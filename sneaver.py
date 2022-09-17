@@ -2,23 +2,28 @@
 from shutil import which
 from pyfiglet import Figlet
 from inputs import devices
+from PIL import Image
 from pynput.keyboard import Key, Controller
-import os,sys,random,subprocess,datetime,re,time,signal,pygame
+import os, sys, random, subprocess, datetime, re, time, signal, pygame
+
 ScriptDir = os.path.dirname(os.path.abspath(__file__))
-DirMovies = ScriptDir+"/Movies/"
-DirData = ScriptDir+"/Data/"
-DirGif = DirData+"Gifs/"
-DirSaves = DirData+"savestate/"
+DirMovies = ScriptDir + "/Movies/"
+DirData = ScriptDir + "/Data/"
+DirGif = DirData + "Gifs/"
+DirSaves = DirData + "savestate/"
 WALLET = 0
 KILLLOAD = ""
 OLDSCREEN = ""
+NEWSCREEN = ""
 NEWRES = ""
+SEGFAULTLIST = []
 LASTSEGFAULT = ""
 GlobStart = ""
+GlobSelect = ""
 GlobExit = ""
 SearchRom = ""
 BADROMS = []
-RESPAWN = False
+LASTBAD = ""
 IGNOREBAD = False
 SEARCH = False
 ERROR = False
@@ -29,15 +34,18 @@ NOUS = False
 JP = False
 EU = False
 US = False
+NOLENCHECK = False
+COMPRESS = False
+RESPAWN = False
 RECORD = False
 REPLAY = False
 CONFIG = False
-ONESHOT= False
+ONESHOT = False
 
 
 
-
-print("""
+print(
+    """
  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄            
 ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌           
  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀            
@@ -65,376 +73,480 @@ print("""
 ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌           
  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀            
 \n
-""")
+"""
+)
 time.sleep(2)
 
+
 def signal_handler(sig, frame):
-        if OLDSCREEN != "":
-               ScreenResize("revert")
-        GetOut()
-
-def RwFile(filename,data,mode):
-
-     try:
+    if OLDSCREEN != "":
+        ScreenResize("revert")
+    GetOut()
 
 
-          if filename == "bad.roms":
-               if mode == "r":
-                    with open(DirData+filename,mode) as file:
-                         lines = file.readlines()
-                         lines = [l.strip() for l in lines ]
-                         return lines
-               else:
-                    FoundBad = False
-                    with open(DirData+filename,"a+") as file:
-                         lines = file.readlines()
-                         lines = [l.strip() for l in lines ]
-                         for item in lines:
-                              if str(data) == item:
-                                   FoundBad = True
-                         if FoundBad == False:
-                              file.write("\n"+str(data))
-          else:
+def RwFile(filename, data, mode):
 
-               with open(DirData+filename,mode) as file:
-                    if mode == "w":
-                        file.write(str(data))
-                    if mode =="r":
-                         for l in file:
-                              return l 
-     except Exception as e:
-          print("Error! : "+str(e))
+    try:
+
+        if filename == "bad.roms":
+            if mode == "r":
+                with open(DirData + filename, mode) as file:
+                    lines = file.readlines()
+                    lines = [l.strip() for l in lines]
+                    return lines
+            else:
+                FoundBad = False
+                with open(DirData + filename, "a+") as file:
+                    lines = file.readlines()
+                    lines = [l.strip() for l in lines]
+                    for item in lines:
+                        if str(data) == item:
+                            FoundBad = True
+                    if FoundBad == False:
+                        file.write("\n" + str(data))
+        if filename == "compress.video":
+            if mode == "r":
+                with open(DirData + filename, mode) as file:
+                    lines = file.readlines()
+                    lines = [l.strip() for l in lines]
+                    return lines
+            elif mode == "a+":
+                with open(DirData + filename, mode) as file:
+                    file.write("\n" + str(data))
+            elif mode == "w":
+                with open(DirData + filename, mode) as file:
+                    file.close()
+        else:
+
+            with open(DirData + filename, mode) as file:
+                if mode == "w":
+                    file.write(str(data))
+                if mode == "r":
+                    for l in file:
+                        return l
+    except Exception as e:
+        print("Error! : " + str(e))
 
 
 def Segfault():
-     global LASTSEGFAULT
-     dmesg = str(subprocess.check_output(["dmesg"])).split("\\n")
-     lastone = []
-     for line in dmesg:
-          if "snes9x" in line and "segfault at" in line:
-               lastone.append(line)
-     try:
-          if len(lastone) > 0 and LASTSEGFAULT == lastone[-1]:
-               Snesisdead = False
-          elif LASTSEGFAULT == "":
-               Snesisdead = False
-          else:
-               Snesisdead = True
-          if len(lastone) > 0:
-               LASTSEGFAULT = lastone[-1]
+    global LASTSEGFAULT
+    global SEGFAULTLIST
+    dmesg = str(subprocess.check_output(["dmesg"])).split("\\n")
+    for line in dmesg:
+        if "snes9x" in line and "segfault at" in line:
+            if line not in SEGFAULTLIST:
+               SEGFAULTLIST.append(line)
+    try:
+        if len(SEGFAULTLIST) > 0 and LASTSEGFAULT in SEGFAULTLIST:
+            Snesisdead = False
+        elif LASTSEGFAULT == "":
+            Snesisdead = False
+        else:
+            print("LASTSEGFAULT:", LASTSEGFAULT)
+            print("SEGFAULTLIST:", SEGFAULTLIST)
+            Snesisdead = True
+        if len(SEGFAULTLIST) > 0:
+            LASTSEGFAULT = SEGFAULTLIST[-1]
 
-     except Exception as e:
-               Pfig("digital","Error LASTSEGFAULT",e)
-               Snesisdead = False
+    except Exception as e:
+        Pfig("digital", "Error LASTSEGFAULT", e)
+        Snesisdead = False
+    return Snesisdead
 
-     return Snesisdead
 
 def Pfig(txt):
-     Fig = Figlet(font='digital')
-     print(Fig.renderText(txt))
-     return
+    Fig = Figlet(font="digital")
+    print(Fig.renderText(txt))
+    return
 
 
 def AutoSaveState():
-     global CHECKPOINT
+    global CHECKPOINT
 
-     if CHECKPOINT >= 23:
-          CHECKPOINT = 0
-          print("\n!!AutoSaving!!\n")
-          keyboard = Controller()
+    if CHECKPOINT >= 15:
+        CHECKPOINT = 0
+        print("\n!!AutoSaving!!\n")
+        keyboard = Controller()
 
-          keyboard.press(Key.insert)
-          keyboard.release(Key.insert)
-
-          time.sleep(1)
-
-          keyboard.press(Key.insert)
-          time.sleep(1)
-          keyboard.release(Key.insert)
+        keyboard.press(Key.insert)
+        time.sleep(0.5)
+        keyboard.release(Key.insert)
 
 
 #     else:
 #          print("\n\nDebug CHECKPOINT : "+str(CHECKPOINT))
 
+
 def WaitForMe(process):
 
-      global ERROR
-      global CHECKPOINT
-      if process != "snes9x":
-              while True:
-                    try:
-                         checkproc = int(subprocess.check_output(["pidof","-s",process]))
-                         time.sleep(1)
-                    except Exception as e:
-                         if "returned non-zero exit status 1" in str(e):
-                              return
-                         else:
-                              Pfig("Error WaitForMe:"+str(e))
+    global ERROR
+    global CHECKPOINT
+    if process != "snes9x":
+        while True:
+            try:
+                checkproc = int(subprocess.check_output(["pidof", "-s", process]))
+                time.sleep(1)
+            except Exception as e:
+                if "returned non-zero exit status 1" in str(e):
+                    return
+                else:
+                    Pfig("Error WaitForMe:" + str(e))
 
-      else:
-          while True:
-              try:
-                    checksnes9x = int(subprocess.check_output(["pidof","-s",process]))
-                    time.sleep(1)
-                    try:
-                         snesfault = Segfault()
-                         if snesfault == True:
-                              Pfig("Segfault found :"+str(LASTSEGFAULT))
-                              ERROR = True
-                              pkill = subprocess.Popen("pkill snes9x",shell=True)
-                              return
-                         else :
-                              ERROR = False
-                    except Exception as e:
-                         Pfig("Segfault Error:"+str(e))
-                         ERROR = True
-                    try:
-                         crashbandicoot = ManualExit()
-                         if crashbandicoot == True:
-                                   Pfig("\nCaught Manual Exit.\n")
-                                   ERROR = True
-                                   pkill = subprocess.Popen("pkill snes9x",shell=True)
-                                   return
-                         else:
-                                   ERROR = False
+    else:
+        while True:
+            try:
+                checksnes9x = int(subprocess.check_output(["pidof", "-s", process]))
+                time.sleep(1)
+                try:
 
-                    except Exception as e:
-                              Pfig("ManualExit Error:"+str(e))
+                    snesfault = Segfault()
+                    if snesfault == True:
+                        Pfig("Segfault found :" + str(LASTSEGFAULT))
+                        ERROR = True
+                        try:
+                            time.sleep(1)
+                            checkproc = int(
+                                subprocess.check_output(["pidof", "-s", process])
+                            )
+                            pfig("-Snes9x still alive...-")
+                            ERROR = False
+                        except Exception as e:
+                            Pfig("-Snes9x already dead..-")
+                            ERROR = True
+                            pkill = subprocess.Popen("pkill snes9x", shell=True)
+                            return
+                    else:
+                        ERROR = False
+                except Exception as e:
+                    Pfig("Segfault Error:" + str(e))
+                    ERROR = True
+                try:
+                    crashbandicoot = ManualExit()
+                    if crashbandicoot == True:
+                        Pfig("\nCaught Manual Exit.\n")
+                        ERROR = True
+                        pkill = subprocess.Popen("pkill snes9x", shell=True)
+                        return
+                    else:
+                        ERROR = False
 
-                    CHECKPOINT = CHECKPOINT + 1
-                    AutoSaveState()
+                except Exception as e:
+                    Pfig("ManualExit Error:" + str(e))
 
-              except Exception as e:
-                         if "returned non-zero exit status 1" in str(e):
-                              ERROR = False
-                              return
-                         else:
-                              Pfig("Proc/Status Error:"+str(e))
+                CHECKPOINT = CHECKPOINT + 1
+                AutoSaveState()
+
+            except Exception as e:
+                if "returned non-zero exit status 1" in str(e):
+                    ERROR = False
+                    return
+                else:
+                    Pfig("Proc/Status Error:" + str(e))
 
 
 def GifLauncher(mode):
 
-     global ONESHOT
-     global KILLLOAD
-     global WALLET
+    global ONESHOT
+    global KILLLOAD
+    global WALLET
 
-     Pfig("\nLaunching animation : " +str(mode))
+    Pfig("\nLaunching animation : " + str(mode))
+    #     print("mode:",mode)
+    if mode != "Wheel":
 
-     if mode != "Wheel":
+        Categorie = [i for i in os.listdir(DirGif)]
+        Gif = ""
+        for name in Categorie:
+            if str(name) == str(mode):
+                Gifiles = [i for i in os.listdir(DirGif + str(name))]
+                rnd = random.randint(0, len(Gifiles) - 1)
+                Gif = DirGif + str(name) + "/" + Gifiles[rnd]
+        try:
+            if mode != "Loading":
+                GifImg = Image.open(Gif)
+                GifImg.seek(0)
+                duration = 0
+                while True:
+                    try:
+                        frame_duration = GifImg.info["duration"]
+                        duration += frame_duration
+                        GifImg.seek(GifImg.tell() + 1)
+                    except EOFError:
+                        duration = duration / 1000
+                        if duration >= 3:
+                            timer = str(int((duration * 2)))
+                        elif int(duration) != 0:
+                            timer = str(int((duration * 3)))
+                        elif int(duration) == 0:
+                            timer = "4"
+                        if int(timer) >= 10:
+                            timer = "10"
+                        print("Gif name =", Gif)
+                        print("Gif duration = %s timer set to %s:" % (duration, timer))
+                        break
+            else:
+                timer = "0"
 
-          Categorie = [i for i in os.listdir(DirGif)]
-          Gif= ""
-          for name in Categorie:
-                    if str(name) == str(mode):
-                         Gifiles = [i for i in os.listdir(DirGif+str(name))]
-                         rnd = random.randint(0,len(Gifiles)-1)
-                         Gif = DirGif+str(name)+"/"+Gifiles[rnd]
+        except Exception as e:
+            print("Error Gif Duration: ", str(e))
+            if mode == "Continue":
+                timer = "10.5"
+            elif mode == "Exit":
+                timer = "10"
+            elif mode == "Loading":
+                timer = "0"
+            elif mode == "GameOver":
+                timer = "10"
+            elif mode == "BadBoy":
+                timer = "10"
+            elif mode == "Error":
+                timer = "7"
+            elif mode == "NewGame":
+                timer = "7"
+            elif mode == "Win":
+                timer = "10"
+            elif mode == "Loose":
+                timer = "8"
+            elif mode == "InsertCoin":
+                timer = "7"
 
-          if mode == "Continue":
-               timer = "10.5"
-          elif mode == "Exit":
-               timer = "10"
-          elif mode == "Loading":
-               timer = "0"
-          elif mode == "GameOver":
-               timer = "10"
-          elif mode == "BadBoy":
-               timer = "10"
-          elif mode == "Error":
-               timer = "7"
-          elif mode == "NewGame":
-               timer = "7"
-          elif mode == "Win":
-               timer = "10"
-          elif mode == "Loose":
-               timer = "8"
-          elif mode == "InsertCoin":
-               timer = "7"
+        if which("sxiv") != True:
+            if mode != "Loading":
+                cmd = "timeout " + timer + " sxiv -abfp -sf " + str(Gif)
+            else:
+                KILLLOAD = "sxiv"
+                cmd = "sxiv -abfp -sf " + str(Gif)
+        elif which("eog") != True:
+            if mode != "Loading":
+                cmd = "timeout " + timer + " eog --fullscreen " + str(Gif)
+            else:
+                KILLLOAD = "eog"
+                cmd = "eog --fullscreen " + str(Gif)
+        elif which("animate") != True:
+            if mode == "Loading":
+                KILLLOAD = "animate"
+            Geo8 = str(ScreenResize("height"))
+            cmd = (
+                "animate -immutable -loop "
+                + timer
+                + " -geometry "
+                + Geo8
+                + " "
+                + str(Gif)
+            )
+        else:
+            # ascimatics ?
+            Pfig("\n\n!!!!Can't Display Animation" + str(mode) + "!!!!\n\n")
 
+            return
 
-          if which("sxiv") != True:
-               if mode != "Loading":
-                    cmd = "timeout "+timer+" sxiv -abfp -sf " + str(Gif)
-               else:
-                    KILLLOAD = "sxiv"
-                    cmd = "sxiv -abfp -sf " + str(Gif)
-          elif which("eog") != True:
-               if mode != "Loading":
-                    cmd = "timeout "+timer+" eog --fullscreen " + str(Gif)
-               else:
-                    KILLLOAD = "eog"
-                    cmd = "eog --fullscreen " + str(Gif)
-          elif which("animate") != True:
-               if mode == "Loading":
-                    KILLLOAD = "animate"
-               Geo8= str(ScreenResize("height"))
-               cmd = "animate -immutable -loop "+timer+" -geometry "+ Geo8 + " "+str(Gif)
-          else :
-               #ascimatics ?
-               Pfig("\n\n!!!!Can't Display Animation"+str(mode)+"!!!!\n\n")
+        try:
+            if mode != "Loading":
+                anim = subprocess.Popen(
+                    cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                )
+                output, error = anim.communicate()
+                aout = output.decode()
+            else:
 
-               return 
+                anim = subprocess.Popen(
+                    cmd,
+                    shell=True,
+                    stdin=None,
+                    stdout=None,
+                    stderr=None,
+                    close_fds=True,
+                )
 
-          try:
-               if mode != "Loading":
-                    anim = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                    output,error = anim.communicate()
-                    aout =output.decode()
-               else:
+        except Exception as e:
+            Pfig("Error: " + str(e))
 
-                    anim = subprocess.Popen(cmd, shell=True,stdin=None, stdout=None, stderr=None, close_fds=True)
+        if mode == "Loose":
+            return
 
-          except Exception as e:
-               Pfig("Error: "+str(e))
+    if mode == "Wheel":
+        playlist = []
+        Avifiles = [i for i in os.listdir(DirGif + "Wheel/Roucoups")]
+        rnd = random.randint(0, len(Avifiles) - 1)
+        playlist.append(DirGif + "Wheel/Roucoups/" + Avifiles[rnd] + " ")
+        Avifiles = [i for i in os.listdir(DirGif + "Wheel/Cutscenes")]
+        rnd = random.randint(0, len(Avifiles) - 1)
+        playlist.append(DirGif + "Wheel/Cutscenes/" + Avifiles[rnd] + " ")
+        Avifiles = [i for i in os.listdir(DirGif + "Wheel/Fireworks")]
+        rnd = random.randint(0, len(Avifiles) - 1)
+        fireworks = Avifiles[rnd]
+        playlist.append(DirGif + "Wheel/Fireworks/" + Avifiles[rnd] + " ")
 
-          if mode =="Loose":
-               return
+        #          cmd = "cvlc --fullscreen --no-volume-save --no-osd --play-and-exit --volume-step 100 "+ str(playlist)
+        Pfig("\nLaunching : Wheel Of Roucoups")
+        for item in playlist:
+            cmd = "ffplay -hide_banner -fs -loglevel panic -autoexit -volume 50 " + str(
+                item
+            )
+            #              print(cmd)
+            cvlc = subprocess.Popen(
+                cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            )
+            output, error = cvlc.communicate()
 
-     if mode == "Wheel":
-          Categorie = [i for i in os.listdir(DirGif)]
-          Avi= ""
-          for name in Categorie:
-                    if str(name) == str(mode):
-                         Avifiles = [i for i in os.listdir(DirGif+str(name))]
-                         rnd = random.randint(0,len(Avifiles)-1)
-                         Avi = DirGif+str(name)+"/"+Avifiles[rnd]
-          cmd = "cvlc --fullscreen --no-osd --play-and-exit "+ str(Avi)
+        if "BonusCoins3.mp4" in fireworks:
+            WALLET = 3
+            RwFile("credits.save", WALLET, "w")
+            ONESHOT = True
+            GifLauncher("Win")
+            return LoadCoin("firstload")
+        elif "BonusCoins5.mp4" in fireworks:
+            WALLET = 5
+            RwFile("credits.save", WALLET, "w")
+            ONESHOT = True
+            GifLauncher("Win")
+            return LoadCoin("firstload")
+        elif "BonusCoins10.mp4" in fireworks:
+            WALLET = 10
+            RwFile("credits.save", WALLET, "w")
+            ONESHOT = True
+            GifLauncher("Win")
+            return LoadCoin("firstload")
+        elif "QUESTIONBLOCK.avi" in fireworks:
+            luck = random.randint(10, 32)
+            WALLET = luck
+            RwFile("credits.save", WALLET, "w")
+            ONESHOT = True
+            GifLauncher("Win")
+            return LoadCoin("firstload")
+        elif "BonusCoins1.mp4" in fireworks:
+            WALLET = 1
+            RwFile("credits.save", WALLET, "w")
+            ONESHOT = True
+            GifLauncher("Loose")
+            return LoadCoin("firstload")
+        elif "BonusCoins2.mp4" in fireworks:
+            WALLET = 2
+            RwFile("credits.save", WALLET, "w")
+            ONESHOT = True
+            GifLauncher("Loose")
+            return LoadCoin("firstload")
 
-          Pfig("\nLaunching : Wheel Of Roucoups")
-          #print(cmd)
-
-          cvlc = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-          output,error = cvlc.communicate()
-
-          if "COIN.avi" in Avi:
-              WALLET = 3
-              RwFile("credits.save",WALLET,"w")
-              ONESHOT = True
-              return GifLauncher("Win")
-          elif "GHOST.avi" in Avi:
-              WALLET = 5
-              RwFile("credits.save",WALLET,"w")
-              ONESHOT = True
-              return GifLauncher("Win")
-          elif "YOSHICOIN.avi" in Avi:
-              WALLET = 10
-              RwFile("credits.save",WALLET,"w")
-              ONESHOT = True
-              return GifLauncher("Win")
-          elif "QUESTIONBLOCK.avi" in Avi:
-              luck = random.randint(10,32)
-              WALLET = luck
-              RwFile("credits.save",WALLET,"w")
-              ONESHOT = True
-              return GifLauncher("Win")
-          elif "DEADBLOCK.avi" in Avi:
-              WALLET = 1 
-              RwFile("credits.save",WALLET,"w")
-              ONESHOT = True
-              return GifLauncher("Loose")
 
 def GetOut():
-     GifLauncher("Exit")
-     Pfig("\n\n==Sneaver exited==\n\n")
-     sys.exit(1)
+    if COMPRESS is True:
+        CompressVids()
 
+    GifLauncher("Exit")
+    Pfig("\n\n==Sneaver exited==\n\n")
+    sys.exit(1)
 
 
 ##ARGH!
 
-if len(sys.argv) >1:
+if len(sys.argv) > 1:
 
-     if "--nojp" in sys.argv:
-          NOJP = True
+    if "--nojp" in sys.argv:
+        NOJP = True
 
-     if "--noeu" in sys.argv:
-          NOEU = True
+    if "--noeu" in sys.argv:
+        NOEU = True
 
-     if "--nous" in sys.argv:
-          NOUS = True
+    if "--nous" in sys.argv:
+        NOUS = True
 
-     if "--jp" in sys.argv:
-          JP = True
+    if "--jp" in sys.argv:
+        JP = True
 
-     if "--eu" in sys.argv:
-          EU = True
+    if "--eu" in sys.argv:
+        EU = True
 
-     if "--us" in sys.argv:
-          US = True
+    if "--us" in sys.argv:
+        US = True
 
-     if "--godmode" in sys.argv:
-          GODMODE = True
+    if "--godmode" in sys.argv:
+        GODMODE = True
 
-     if "--record" in sys.argv:
-          RECORD = True
+    if "--record" in sys.argv:
+        RECORD = True
 
-     if "--replay" in sys.argv:
-          REPLAY = True
+    if "--replay" in sys.argv:
+        REPLAY = True
 
-     if "--config" in sys.argv:
-          CONFIG = True
+    if "--config" in sys.argv:
+        CONFIG = True
 
-     if "--search" in sys.argv:
-          SEARCH = True
-          pos = sys.argv.index("--search")
-          try:
-               SearchRom = str(sys.argv[pos+1])
-          except:
-             print("Search Argument is empty.")
-             sys.exit(0)
+    if "--nolencheck" in sys.argv:
+        NOLENCHECK = True
 
-     if "--respawn" in sys.argv:
-          RESPAWN = True
-          IGNOREBAD = True
+    if "--search" in sys.argv:
+        SEARCH = True
+        pos = sys.argv.index("--search")
+        try:
+            SearchRom = str(sys.argv[pos + 1])
+        except:
+            print("Search Argument is empty.")
+            sys.exit(0)
 
-     if "--allowbad" in sys.argv:
-          IGNOREBAD = True
+    if "--respawn" in sys.argv:
+        RESPAWN = True
 
-     if "--flushbad" in sys.argv:
-          RwFile("bad.roms","","w")
-          sys.exit(1)
+    if "--allowbad" in sys.argv:
+        IGNOREBAD = True
 
-     if "--badkid" in sys.argv:
-          try:
-             with open(DirData+"credits.save") as cs:
-               for coin in cs:
+    if "--flushbad" in sys.argv:
+        RwFile("bad.roms", "", "w")
+        sys.exit(1)
+
+    if "--compress" in sys.argv and len(sys.argv) == 2:
+         CompressVids()
+         GetOut()
+
+    elif "--compress" in sys.argv:
+        COMPRESS = True
+
+    if "--badkid" in sys.argv:
+        try:
+            with open(DirData + "credits.save") as cs:
+                for coin in cs:
                     Coins = int(coin)
-          except Exception as e:
-               print("Error:",e)
-               sys.exit(1)
-          print("Coins in wallet : ",Coins)
-          print()
-          while True:
-               spanknbr = input("How many coins do you want to remove from the wallet ? (Enter a number between 1 to 32) :")
-               if spanknbr.isdigit() == True:
-                    if int(spanknbr) <= 32 and int(spanknbr) != 0:
-                         break
-          GifLauncher("BadBoy")
-          if Coins != 0:
-               Totalcoin = Coins - int(spanknbr)
-               RwFile("credits.save",Totalcoin,"w")
-          GifLauncher("GameOver")
-          GetOut()
+        except Exception as e:
+            print("Error:", e)
+            sys.exit(1)
+        print("Coins in wallet : ", Coins)
+        print()
+        while True:
+            spanknbr = input(
+                "How many coins do you want to remove from the wallet ? (Enter a number between 1 to 32) :"
+            )
+            if spanknbr.isdigit() == True:
+                if int(spanknbr) <= 32 and int(spanknbr) != 0:
+                    break
+        GifLauncher("BadBoy")
+        if Coins != 0:
+            Totalcoin = Coins - int(spanknbr)
+            RwFile("credits.save", Totalcoin, "w")
+        GifLauncher("GameOver")
+        GetOut()
 
-
-     if sys.argv[1] == "-h" or sys.argv[1] == "--help":
-          print("\n**Sneaver is a script using snes9x and vlc to play or watch a snes game at random.\n\n**Download a rom put it in its folder inside the Movies directory\n\n**Then launch sneaver ^^\n\n\n**Use :\n\nsneaver --config (To configure your gamepads)  \n\nsneaver --record (For recording a random game.)\nsneaver --replay (For watching all the movies recorded with vlc.)\nsneaver --record --nojp/--jp (Avoid or Only recording Japenese games.)\nsneaver --record --noeu/--eu (Avoid or Only recording European games.)\nsneaver --record --nous/--us (Avoid or Only recording American games.)\nsneaver --record/--replay --search [Name] To search for a rom.\nsneaver --record --allowbad When a rom crash its filename is added in a list preventing it to be used again.\nUse this argument to ignore this list.\n\nsneaver --flushbad To erase bad roms list .\n\nsneaver --record --respawn After a crash try reloading the last auto save.\n\n\nWhile in record mode Sneaver is using a credit system.\nWhen credits reaches Zero you can't play anymore.\nseaver --badkid to remove some coins.\nsneaver --record --godmode (To get rich)\n\n\nKeep pressing the Exit button multiple times if Snes9x ever crash.\n**Have fun !!\n")
-          print()
-          sys.exit(1)
+    if sys.argv[1] == "-h" or sys.argv[1] == "--help":
+        print(
+            "\n**Sneaver is a script using snes9x and ffmpeg to play or watch a snes game at random.\n\n**Download a rom put it in its folder inside the Movies directory\n\n**Then launch sneaver ^^\n\n\n**Use :\n\n./sneaver.py --config (To configure your gamepads)  \n\n./sneaver.py --record (For recording a random game.)\n./sneaver.py --replay (For watching all the movies recorded with ffplay.)\n./sneaver.py --record --nojp/--jp (Avoid or Only recording Japenese games.)\n./sneaver.py --record --noeu/--eu (Avoid or Only recording European games.)\n./sneaver.py --record --nous/--us (Avoid or Only recording American games.)\n./sneaver.py --record/--replay --search [Name] To search for a rom.\n./sneaver.py --record --nolencheck Do not erase recorded videos that are less than 42s\n./sneaver.py --record --respawn Start the rom using its last auto save state.\n./sneaver.py --record --allowbad Ignore Blacklisted Roms.\n\n./sneaver.py --flushbad To erase bad roms list .\n./sneaver.py --compress To compress recorded videos before quitting.\n\n\nWhile in record mode Sneaver is using a credit system.\nWhen credits reaches Zero you can't play anymore.\nseaver --badkid to remove some coins.\n./sneaver.py --record --godmode (To get rich)\n\n\nKeep pressing the Exit button multiple times if Snes9x ever crash.\n**Have fun !!\n"
+        )
+        print()
+        sys.exit(1)
 else:
-          print("\n**Sneaver is a script using snes9x and vlc to play or watch a snes game at random.\n\n**Download a rom put it in its folder inside the Movies directory\n\n**Then launch sneaver ^^\n\n\n**Use :\n\nsneaver --config (To configure your gamepads)  \nsneaver --record (For recording a random game.)\nsneaver --replay (For watching all the movies recorded with vlc.)\nsneaver --record --nojp/--jp (Avoid or Only recording Japenese games.)\nsneaver --record --noeu/--eu (Avoid or Only recording European games.)\nsneaver --record --nous/--us (Avoid or Only recording American games.)\nsneaver --record/--replay --search [Name] To search for a rom.\nsneaver --record --allowbad When a rom crash it is add in a list preventing it to be used again .\nUse this argument to ignore this list.\nsneaver --flushbad To erase bad roms list .\nsneaver --record --respawn After a crash try reloading the last auto save.\n\n\nWhile in record mode Sneaver is using a credit system.\nseaver -badkid to remove some coins.\nsneaver --record --godmode (To get rich)\n\nKeep pressing the Exit button multiple time if Snes9x ever crash.\n**Have fun !!\n")
-          print()
-          sys.exit(1)
+    print(
+        "\n**Sneaver is a script using snes9x and ffmpeg to play or watch a snes game at random.\n\n**Download a rom put it in its folder inside the Movies directory\n\n**Then launch sneaver ^^\n\n\n**Use :\n\n./sneaver.py --config (To configure your gamepads)  \n./sneaver.py --record (For recording a random game.)\n./sneaver.py --replay (For watching all the movies recorded with ffplay.)\n./sneaver.py --record --nojp/--jp (Avoid or Only recording Japenese games.)\n./sneaver.py --record --noeu/--eu (Avoid or Only recording European games.)\n./sneaver.py --record --nous/--us (Avoid or Only recording American games.)\n./sneaver.py --record/--replay --search [Name] To search for a rom.\n./sneaver.py --record --nolencheck Do not erase recorded videos that are less than 42s\n../sneaver.py --record --respawn Start the rom using its last auto save state.\n./sneaver.py --record --allowbad Ignore Blacklisted Roms.\n./sneaver.py --flushbad To erase bad roms list .\n./sneaver.py --compress To compress recorded videos before quitting.\n\n\nWhile in record mode Sneaver is using a credit system.\n./sneaver.py -badkid to remove some coins.\n./sneaver.py --record --godmode (To get rich)\n\nKeep pressing the Exit button multiple time if Snes9x ever crash.\n**Have fun !!\n"
+    )
+    print()
+    sys.exit(1)
 
 if RECORD == True and REPLAY == True:
-            print("\nArguments record and replay can't be used at the same time.\n\n")
-            sys.exit(1)
+    print("\nArguments record and replay can't be used at the same time.\n\n")
+    sys.exit(1)
 
 
 def LoadCoin(mode):
-     global WALLET
+    global WALLET
 
-     print("""
+    print(
+        """
  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄ 
 ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀ 
@@ -466,28 +578,30 @@ def LoadCoin(mode):
  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄ 
 ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀ 
-""")
-     if mode == "firstload":
-          if GODMODE == False:
-               Coins = int(RwFile("credits.save",None,"r"))
-               if Coins < 0:
-                    Coins = 0
+"""
+    )
+    if mode == "firstload":
+        if GODMODE == False:
+            Coins = int(RwFile("credits.save", None, "r"))
+            if Coins < 0:
+                Coins = 0
 
-               if Coins > 32 :
-                    Coins = 32
+            if Coins > 32:
+                Coins = 32
 
-               WALLET = int(Coins)
-               return
+            WALLET = int(Coins)
+            return
 
-          else:
-               Coins = 33
-               WALLET = Coins
-               return
+        else:
+            Coins = 33
+            WALLET = Coins
+            return
 
-     if mode == "printcoins":
-          Coins = WALLET
+    if mode == "printcoins":
+        Coins = WALLET
 
-     print("""
+    print(
+        """
  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄ 
 ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀ 
@@ -527,14 +641,16 @@ def LoadCoin(mode):
  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄ 
 ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀ 
-""")
-     time.sleep(2)
-     print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
-     coint = int(Coins)
-     cointer = 1
+"""
+    )
+    time.sleep(2)
+    print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+    coint = int(Coins)
+    cointer = 1
 
-     while cointer <= coint :
-          print("""
+    while cointer <= coint:
+        print(
+            """
              _.ooodIIIIIIIbooo._
          _.oII      _____    * IIo._
        oPI  _.oooIIII   IIIIo|o*_* IYo
@@ -558,13 +674,15 @@ def LoadCoin(mode):
        IY_   `Iooo.__   __.oo|I* * _PI
          ``Ioo_     IIIII    * _ooII`
               `IIIbooooooodIII`
-          """)
-          time.sleep(0.1)
-          cointer = cointer + 1
-          if cointer >= coint:
-               break
+          """
+        )
+        time.sleep(0.1)
+        cointer = cointer + 1
+        if cointer >= coint:
+            break
 
-          print('''
+        print(
+            """
 \t               ,,===IIIIII===,,
 \t           ,==¨¨` |) |   /)   `¨¨==,
 \t        ,=¨`|)    | )|  /__)   /)  `¨=,
@@ -587,13 +705,15 @@ def LoadCoin(mode):
 \t       `¨=,_ )__/   |__  |__   |    ,=¨`
 \t          `¨¨=,__             __,=¨¨`
 \t               ``¨¨=========¨¨``
-          ''')
-          cointer = cointer + 1
-          time.sleep(0.1)
-          if cointer >= coint:
-               break
+          """
+        )
+        cointer = cointer + 1
+        time.sleep(0.1)
+        if cointer >= coint:
+            break
 
-          print("""
+        print(
+            """
 \t\t             _.ooodIIIIIIIbooo._
 \t\t         _.oII   |`.  |    |   IIo._
 \t\t       oPI  |`.  |  `.|    |    |  IYo
@@ -617,14 +737,16 @@ def LoadCoin(mode):
 \t\t       IY_  | mm |  19|89  |  `.|  _PI
 \t\t         ``Ioo_  |    |  `.|  _ooII`
 \t\t              `IIIbooooooodIII`
-     """)
+     """
+        )
 
-          cointer = cointer + 1
-          time.sleep(0.1)
-          if cointer >= coint:
-               break
+        cointer = cointer + 1
+        time.sleep(0.1)
+        if cointer >= coint:
+            break
 
-          print("""
+        print(
+            """
 \t\t\t             _.ooodIIIIIIIbooo._
 \t\t\t         _.oII      _____    * IIo._
 \t\t\t       oPI  _.oooIIII   IIIIo|o*_* IYo
@@ -648,13 +770,15 @@ def LoadCoin(mode):
 \t\t\t       IY_   `Iooo.__   __.oo|I* * _PI
 \t\t\t         ``Ioo_     IIIII    * _ooII`
 \t\t\t              `IIIbooooooodIII`
-     """)
-          cointer = cointer + 1
-          time.sleep(0.1)
-          if cointer >= coint:
-               break
+     """
+        )
+        cointer = cointer + 1
+        time.sleep(0.1)
+        if cointer >= coint:
+            break
 
-          print("""
+        print(
+            """
 \t\t\t\t             _.ooodIIIIIIIbooo._
 \t\t\t\t         _.oII      _____    * IIo._
 \t\t\t\t       oPI  _.oooIIII   IIIIo|o*_* IYo
@@ -678,13 +802,15 @@ def LoadCoin(mode):
 \t\t\t\t       IY_   `Iooo.__   __.oo|I* * _PI
 \t\t\t\t         ``Ioo_     IIIII    * _ooII`
 \t\t\t\t              `IIIbooooooodIII`
-          """)
-          time.sleep(0.1)
-          cointer = cointer + 1
-          if cointer >= coint:
-               break
+          """
+        )
+        time.sleep(0.1)
+        cointer = cointer + 1
+        if cointer >= coint:
+            break
 
-          print('''
+        print(
+            """
 \t\t\t\t               ,,===IIIIIII===,,
 \t\t\t\t           ,==¨¨` |) |   /)   `¨¨==,
 \t\t\t\t        ,=¨`|)    | )|  /__)   /)  `¨=,
@@ -707,13 +833,15 @@ def LoadCoin(mode):
 \t\t\t\t       `¨=,_ )__/   |__  |__   |    ,=¨`
 \t\t\t\t          `¨¨=,__             __,=¨¨`
 \t\t\t\t               ``¨¨=========¨¨``
-          ''')
-          cointer = cointer + 1
-          time.sleep(0.1)
-          if cointer >= coint:
-               break
+          """
+        )
+        cointer = cointer + 1
+        time.sleep(0.1)
+        if cointer >= coint:
+            break
 
-          print("""
+        print(
+            """
 \t\t\t             _.ooodIIIIIIIbooo._
 \t\t\t         _.oII   |`.  |    |   IIo._
 \t\t\t       oPI  |`.  |  `.|    |    |  IYo
@@ -737,14 +865,16 @@ def LoadCoin(mode):
 \t\t\t       IY_  | mm |  19|89  |  `.|  _PI
 \t\t\t         ``Ioo_  |    |  `.|  _ooII`
 \t\t\t              `IIIbooooooodIII`
-     """)
+     """
+        )
 
-          cointer = cointer + 1
-          time.sleep(0.1)
-          if cointer >= coint:
-               break
+        cointer = cointer + 1
+        time.sleep(0.1)
+        if cointer >= coint:
+            break
 
-          print("""
+        print(
+            """
 \t\t             _.ooodIIIIIIIbooo._
 \t\t         _.oII      _____    * IIo._
 \t\t       oPI  _.oooIIII   IIIIo|o*_* IYo
@@ -768,56 +898,54 @@ def LoadCoin(mode):
 \t\t       IY_   `Iooo.__   __.oo|I* * _PI
 \t\t         ``Ioo_     IIIII    * _ooII`
 \t\t              `IIIbooooooodIII`
-     """)
-          cointer = cointer + 1
-          time.sleep(0.1)
+     """
+        )
+        cointer = cointer + 1
+        time.sleep(0.1)
 
-     Cointing(Coins)
+    Cointing(Coins)
 
-     time.sleep(1)
-     return Coins
+    time.sleep(1)
+    return Coins
 
 
 def InsertCoin(coinsleft):
-     global WALLET
+    global WALLET
 
-     coinsleft = int(coinsleft)
-     if coinsleft <= 0:
+    coinsleft = int(coinsleft)
+    if coinsleft <= 0:
 
-          if ONESHOT == False:
+        if ONESHOT == False:
 
-               Pfig("\n\n!!!---LUCKY DAY---!!!\n!!!--WELCOME TO THE--!!!\n!!!---ROUCOUPS---!!!\n!!!---OF---!!!\n!!!---FORTUNE---!!!\n")
+            Pfig(
+                "\n\n!!!---LUCKY DAY---!!!\n!!!--WELCOME TO THE--!!!\n!!!---ROUCOUPS---!!!\n!!!---OF---!!!\n!!!---FORTUNE---!!!\n"
+            )
 
-               GifLauncher("Wheel")
+            GifLauncher("Wheel")
 
-          else :
+        else:
 
-               GifLauncher("Continue")
+            GifLauncher("Continue")
 
-               Pfig("\n\n===NOT ENOUGHT CREDIT TO PLAY==\n\n")
-               GifLauncher("GameOver")
-               GetOut()
-     else:
+            Pfig("\n\n===NOT ENOUGHT CREDIT TO PLAY==\n\n")
+            GifLauncher("GameOver")
+            GetOut()
+    else:
 
-          Pfig("\n\n--New Coin Inserted--\n--Get Ready--\n\n")
-          time.sleep(1)
-          GifLauncher("InsertCoin")
-          if GODMODE == False:
-               WALLET = coinsleft - 1
-               RwFile("credits.save",coinsleft-1,"w")
-          
-
-
+        Pfig("\n\n--New Coin Inserted--\n--Get Ready--\n\n")
+        time.sleep(1)
+        GifLauncher("InsertCoin")
+        if GODMODE == False:
+            WALLET = coinsleft - 1
+            RwFile("credits.save", coinsleft - 1, "w")
 
 
 def Cointing(credits):
 
-          middle = ""
-    
+    middle = ""
 
-
-          if int(credits) == 1:
-               middle = """
+    if int(credits) == 1:
+        middle = """
                                                ▄▄▄▄▄▄▄▄▄     ▄▄▄▄                                                    
                                               ▐░░░░░░░░░▌  ▄█░░░░▌                                                   
                                              ▐░█░█▀▀▀▀▀█░▌▐░░▌▐░░▌                                                   
@@ -829,8 +957,8 @@ def Cointing(credits):
                                              ▐░█▄▄▄▄▄█░█░▌▄▄▄▄█░░█▄▄▄                                                
                                               ▐░░░░░░░░░▌▐░░░░░░░░░░░▌                                               
                                                ▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀                                                """
-          if int(credits) == 2:
-               middle = """
+    if int(credits) == 2:
+        middle = """
                                                ▄▄▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄▄▄▄▄                                               
                                               ▐░░░░░░░░░▌ ▐░░░░░░░░░░░▌                                              
                                              ▐░█░█▀▀▀▀▀█░▌ ▀▀▀▀▀▀▀▀▀█░▌                                              
@@ -842,8 +970,8 @@ def Cointing(credits):
                                              ▐░█▄▄▄▄▄█░█░▌▐░█▄▄▄▄▄▄▄▄▄                                               
                                               ▐░░░░░░░░░▌ ▐░░░░░░░░░░░▌                                              
                                                ▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀▀▀▀                                             """
-          if int(credits) == 3:
-               middle = """
+    if int(credits) == 3:
+        middle = """
                                                ▄▄▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄▄▄▄▄                                               
                                               ▐░░░░░░░░░▌ ▐░░░░░░░░░░░▌                                              
                                              ▐░█░█▀▀▀▀▀█░▌ ▀▀▀▀▀▀▀▀▀█░▌                                              
@@ -855,8 +983,8 @@ def Cointing(credits):
                                              ▐░█▄▄▄▄▄█░█░▌ ▄▄▄▄▄▄▄▄▄█░▌                                              
                                               ▐░░░░░░░░░▌ ▐░░░░░░░░░░░▌                                              
                                                ▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀▀▀▀                                              """
-          if int(credits) ==4:
-               middle ="""
+    if int(credits) == 4:
+        middle = """
                                                ▄▄▄▄▄▄▄▄▄   ▄         ▄                                               
                                               ▐░░░░░░░░░▌ ▐░▌       ▐░▌                                              
                                              ▐░█░█▀▀▀▀▀█░▌▐░▌       ▐░▌                                              
@@ -868,8 +996,8 @@ def Cointing(credits):
                                              ▐░█▄▄▄▄▄█░█░▌          ▐░▌                                              
                                               ▐░░░░░░░░░▌           ▐░▌                                              
                                                ▀▀▀▀▀▀▀▀▀             ▀                                              """
-          if int(credits) == 5:
-               middle = """
+    if int(credits) == 5:
+        middle = """
                                                ▄▄▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄▄▄▄▄                                               
                                               ▐░░░░░░░░░▌ ▐░░░░░░░░░░░▌                                              
                                              ▐░█░█▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀▀▀                                               
@@ -881,8 +1009,8 @@ def Cointing(credits):
                                              ▐░█▄▄▄▄▄█░█░▌ ▄▄▄▄▄▄▄▄▄█░▌                                              
                                               ▐░░░░░░░░░▌ ▐░░░░░░░░░░░▌                                              
                                                ▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀▀▀▀                                              """
-          if int(credits) == 6:
-               middle = """
+    if int(credits) == 6:
+        middle = """
                                                ▄▄▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄▄▄▄▄                                               
                                               ▐░░░░░░░░░▌ ▐░░░░░░░░░░░▌                                              
                                              ▐░█░█▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀▀▀                                               
@@ -894,8 +1022,8 @@ def Cointing(credits):
                                              ▐░█▄▄▄▄▄█░█░▌▐░█▄▄▄▄▄▄▄█░▌                                              
                                               ▐░░░░░░░░░▌ ▐░░░░░░░░░░░▌                                              
                                                ▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀▀▀▀                                              """
-          if int(credits) == 7:
-               middle = """
+    if int(credits) == 7:
+        middle = """
                                                ▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄                                                
                                               ▐░░░░░░░░░▌▐░░░░░░░░░░░▌                                               
                                              ▐░█░█▀▀▀▀▀█░▌▀▀▀▀▀▀▀▀▀█░▌                                               
@@ -907,8 +1035,8 @@ def Cointing(credits):
                                              ▐░█▄▄▄▄▄█░█░▌   ▐░▌                                                     
                                               ▐░░░░░░░░░▌   ▐░▌                                                      
                                                ▀▀▀▀▀▀▀▀▀     ▀                                                      """
-          if int(credits) == 8:
-               middle = """
+    if int(credits) == 8:
+        middle = """
                                                ▄▄▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄▄▄▄▄                                               
                                               ▐░░░░░░░░░▌ ▐░░░░░░░░░░░▌                                              
                                              ▐░█░█▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀█░▌                                              
@@ -920,8 +1048,8 @@ def Cointing(credits):
                                              ▐░█▄▄▄▄▄█░█░▌▐░█▄▄▄▄▄▄▄█░▌                                              
                                               ▐░░░░░░░░░▌ ▐░░░░░░░░░░░▌                                              
                                                ▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀▀▀▀                                              """
-          if int(credits) == 9:
-               middle = """
+    if int(credits) == 9:
+        middle = """
                                                ▄▄▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄▄▄▄▄                                               
                                               ▐░░░░░░░░░▌ ▐░░░░░░░░░░░▌                                              
                                              ▐░█░█▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀█░▌                                              
@@ -933,8 +1061,8 @@ def Cointing(credits):
                                              ▐░█▄▄▄▄▄█░█░▌ ▄▄▄▄▄▄▄▄▄█░▌                                              
                                               ▐░░░░░░░░░▌ ▐░░░░░░░░░░░▌                                              
                                                ▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀▀▀▀                                              """
-          if int(credits) == 10:
-               middle = """
+    if int(credits) == 10:
+        middle = """
                                                  ▄▄▄▄      ▄▄▄▄▄▄▄▄▄                                                 
                                                ▄█░░░░▌    ▐░░░░░░░░░▌                                                
                                               ▐░░▌▐░░▌   ▐░█░█▀▀▀▀▀█░▌                                               
@@ -946,8 +1074,8 @@ def Cointing(credits):
                                               ▄▄▄▄█░░█▄▄▄▐░█▄▄▄▄▄█░█░▌                                               
                                              ▐░░░░░░░░░░░▌▐░░░░░░░░░▌                                                
                                               ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀                                                 """
-          if int(credits) == 11:
-                 middle = """
+    if int(credits) == 11:
+        middle = """
                                                  ▄▄▄▄         ▄▄▄▄                                                   
                                                ▄█░░░░▌      ▄█░░░░▌                                                  
                                               ▐░░▌▐░░▌     ▐░░▌▐░░▌                                                  
@@ -959,8 +1087,8 @@ def Cointing(credits):
                                               ▄▄▄▄█░░█▄▄▄  ▄▄▄▄█░░█▄▄▄                                               
                                              ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌                                              
                                               ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀                                               """
-          if int(credits) == 12:
-                  middle = """
+    if int(credits) == 12:
+        middle = """
                                                  ▄▄▄▄      ▄▄▄▄▄▄▄▄▄▄▄                                               
                                                ▄█░░░░▌    ▐░░░░░░░░░░░▌                                              
                                               ▐░░▌▐░░▌     ▀▀▀▀▀▀▀▀▀█░▌                                              
@@ -972,8 +1100,8 @@ def Cointing(credits):
                                               ▄▄▄▄█░░█▄▄▄ ▐░█▄▄▄▄▄▄▄▄▄                                               
                                              ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌                                              
                                               ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀                                              """
-          if int(credits) == 13:
-               middle = """
+    if int(credits) == 13:
+        middle = """
                                                  ▄▄▄▄      ▄▄▄▄▄▄▄▄▄▄▄                                               
                                                ▄█░░░░▌    ▐░░░░░░░░░░░▌                                              
                                               ▐░░▌▐░░▌     ▀▀▀▀▀▀▀▀▀█░▌                                              
@@ -985,8 +1113,8 @@ def Cointing(credits):
                                               ▄▄▄▄█░░█▄▄▄  ▄▄▄▄▄▄▄▄▄█░▌                                              
                                              ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌                                              
                                               ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀                                              """
-          if int(credits) == 14:
-               middle = """
+    if int(credits) == 14:
+        middle = """
                                                  ▄▄▄▄  ▄         ▄                                                   
                                                ▄█░░░░▌▐░▌       ▐░▌                                                  
                                               ▐░░▌▐░░▌▐░▌       ▐░▌                                                  
@@ -998,8 +1126,8 @@ def Cointing(credits):
                                               ▄▄▄▄█░░█▄▄▄       ▐░▌                                                  
                                              ▐░░░░░░░░░░░▌      ▐░▌                                                  
                                               ▀▀▀▀▀▀▀▀▀▀▀        ▀                                                   """
-          if int(credits) == 15:
-               middle = """
+    if int(credits) == 15:
+        middle = """
                                                  ▄▄▄▄      ▄▄▄▄▄▄▄▄▄▄▄                                               
                                                ▄█░░░░▌    ▐░░░░░░░░░░░▌                                              
                                               ▐░░▌▐░░▌    ▐░█▀▀▀▀▀▀▀▀▀                                               
@@ -1011,8 +1139,8 @@ def Cointing(credits):
                                               ▄▄▄▄█░░█▄▄▄  ▄▄▄▄▄▄▄▄▄█░▌                                              
                                              ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌                                              
                                               ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀                                              """
-          if int(credits) == 16:
-               middle = """
+    if int(credits) == 16:
+        middle = """
                                                  ▄▄▄▄      ▄▄▄▄▄▄▄▄▄▄▄                                               
                                                ▄█░░░░▌    ▐░░░░░░░░░░░▌                                              
                                               ▐░░▌▐░░▌    ▐░█▀▀▀▀▀▀▀▀▀                                               
@@ -1024,8 +1152,8 @@ def Cointing(credits):
                                               ▄▄▄▄█░░█▄▄▄ ▐░█▄▄▄▄▄▄▄█░▌                                              
                                              ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌                                              
                                               ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀                                             """
-          if int(credits) == 17:
-               middle = """
+    if int(credits) == 17:
+        middle = """
                                                  ▄▄▄▄   ▄▄▄▄▄▄▄▄▄▄▄                                                  
                                                ▄█░░░░▌ ▐░░░░░░░░░░░▌                                                 
                                               ▐░░▌▐░░▌  ▀▀▀▀▀▀▀▀▀█░▌                                                 
@@ -1037,8 +1165,8 @@ def Cointing(credits):
                                               ▄▄▄▄█░░█▄▄▄  ▐░▌                                                       
                                              ▐░░░░░░░░░░░▌▐░▌                                                        
                                               ▀▀▀▀▀▀▀▀▀▀▀  ▀                                                        """
-          if int(credits) == 18:
-               middle = """
+    if int(credits) == 18:
+        middle = """
                                                  ▄▄▄▄      ▄▄▄▄▄▄▄▄▄▄▄                                               
                                                ▄█░░░░▌    ▐░░░░░░░░░░░▌                                              
                                               ▐░░▌▐░░▌    ▐░█▀▀▀▀▀▀▀█░▌                                              
@@ -1050,8 +1178,8 @@ def Cointing(credits):
                                               ▄▄▄▄█░░█▄▄▄ ▐░█▄▄▄▄▄▄▄█░▌                                              
                                              ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌                                              
                                               ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀                                               """
-          if int(credits) == 19:
-               middle = """
+    if int(credits) == 19:
+        middle = """
                                                  ▄▄▄▄      ▄▄▄▄▄▄▄▄▄▄▄                                               
                                                ▄█░░░░▌    ▐░░░░░░░░░░░▌                                              
                                               ▐░░▌▐░░▌    ▐░█▀▀▀▀▀▀▀█░▌                                              
@@ -1063,8 +1191,8 @@ def Cointing(credits):
                                               ▄▄▄▄█░░█▄▄▄  ▄▄▄▄▄▄▄▄▄█░▌                                              
                                              ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌                                              
                                               ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀                                               """
-          if int(credits) == 20:
-               middle = """
+    if int(credits) == 20:
+        middle = """
                                               ▄▄▄▄▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄▄▄                                                
                                              ▐░░░░░░░░░░░▌ ▐░░░░░░░░░▌                                               
                                               ▀▀▀▀▀▀▀▀▀█░▌▐░█░█▀▀▀▀▀█░▌                                              
@@ -1076,8 +1204,8 @@ def Cointing(credits):
                                              ▐░█▄▄▄▄▄▄▄▄▄ ▐░█▄▄▄▄▄█░█░▌                                              
                                              ▐░░░░░░░░░░░▌ ▐░░░░░░░░░▌                                               
                                               ▀▀▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀▀                                                """
-          if int(credits) == 21:
-               middle = """
+    if int(credits) == 21:
+        middle = """
                                               ▄▄▄▄▄▄▄▄▄▄▄     ▄▄▄▄                                                   
                                              ▐░░░░░░░░░░░▌  ▄█░░░░▌                                                  
                                               ▀▀▀▀▀▀▀▀▀█░▌ ▐░░▌▐░░▌                                                  
@@ -1089,8 +1217,8 @@ def Cointing(credits):
                                              ▐░█▄▄▄▄▄▄▄▄▄  ▄▄▄▄█░░█▄▄▄                                               
                                              ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌                                              
                                               ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀                                              """
-          if int(credits) == 22:
-               middle = """
+    if int(credits) == 22:
+        middle = """
                                               ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄                                               
                                              ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌                                              
                                               ▀▀▀▀▀▀▀▀▀█░▌ ▀▀▀▀▀▀▀▀▀█░▌                                              
@@ -1102,8 +1230,8 @@ def Cointing(credits):
                                              ▐░█▄▄▄▄▄▄▄▄▄ ▐░█▄▄▄▄▄▄▄▄▄                                               
                                              ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌                                              
                                               ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀                                               """
-          if int(credits) == 23:
-               middle = """
+    if int(credits) == 23:
+        middle = """
                                               ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄                                               
                                              ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌                                              
                                               ▀▀▀▀▀▀▀▀▀█░▌ ▀▀▀▀▀▀▀▀▀█░▌                                              
@@ -1115,8 +1243,8 @@ def Cointing(credits):
                                              ▐░█▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄█░▌                                              
                                              ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌                                              
                                               ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀                                               """
-          if int(credits) == 24:
-               middle = """
+    if int(credits) == 24:
+        middle = """
                                               ▄▄▄▄▄▄▄▄▄▄▄  ▄         ▄ 
                                              ▐░░░░░░░░░░░▌▐░▌       ▐░▌
                                               ▀▀▀▀▀▀▀▀▀█░▌▐░▌       ▐░▌
@@ -1129,8 +1257,8 @@ def Cointing(credits):
                                              ▐░░░░░░░░░░░▌          ▐░▌
                                               ▀▀▀▀▀▀▀▀▀▀▀            ▀ 
                                                                        """
-          if int(credits) == 25:
-               middle = """
+    if int(credits) == 25:
+        middle = """
                                               ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄ 
                                              ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
                                               ▀▀▀▀▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀▀▀ 
@@ -1143,8 +1271,8 @@ def Cointing(credits):
                                              ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
                                               ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀ 
                                                                        """
-          if int(credits) == 26:
-               middle = """
+    if int(credits) == 26:
+        middle = """
                                               ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄ 
                                              ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
                                               ▀▀▀▀▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀▀▀ 
@@ -1158,8 +1286,8 @@ def Cointing(credits):
                                               ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀ 
                                                                        """
 
-          if int(credits) == 27:
-               middle = """
+    if int(credits) == 27:
+        middle = """
                                               ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄ 
                                              ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
                                               ▀▀▀▀▀▀▀▀▀█░▌ ▀▀▀▀▀▀▀▀▀█░▌
@@ -1172,8 +1300,8 @@ def Cointing(credits):
                                              ▐░░░░░░░░░░░▌   ▐░▌       
                                               ▀▀▀▀▀▀▀▀▀▀▀     ▀        
                                                                        """
-          if int(credits) == 28:
-               middle = """
+    if int(credits) == 28:
+        middle = """
 
                                               ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄ 
                                              ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
@@ -1187,8 +1315,8 @@ def Cointing(credits):
                                              ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
                                               ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀ 
                                                                        """
-          if int(credits) == 29:
-               middle = """
+    if int(credits) == 29:
+        middle = """
                                               ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄ 
                                              ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
                                               ▀▀▀▀▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀█░▌
@@ -1202,8 +1330,8 @@ def Cointing(credits):
                                               ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀ 
                                                                        """
 
-          if int(credits) == 30:
-               middle = """
+    if int(credits) == 30:
+        middle = """
                                               ▄▄▄▄▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄▄▄  
                                              ▐░░░░░░░░░░░▌ ▐░░░░░░░░░▌ 
                                               ▀▀▀▀▀▀▀▀▀█░▌▐░█░█▀▀▀▀▀█░▌
@@ -1216,8 +1344,8 @@ def Cointing(credits):
                                              ▐░░░░░░░░░░░▌ ▐░░░░░░░░░▌ 
                                               ▀▀▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀▀  
                                                                        """
-          if int(credits) == 31:
-               middle = """
+    if int(credits) == 31:
+        middle = """
                                               ▄▄▄▄▄▄▄▄▄▄▄     ▄▄▄▄     
                                              ▐░░░░░░░░░░░▌  ▄█░░░░▌    
                                               ▀▀▀▀▀▀▀▀▀█░▌ ▐░░▌▐░░▌    
@@ -1230,8 +1358,8 @@ def Cointing(credits):
                                              ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
                                               ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀ 
                                                                        """
-          if int(credits) == 32:
-               middle = """
+    if int(credits) == 32:
+        middle = """
                                               ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄ 
                                              ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
                                               ▀▀▀▀▀▀▀▀▀█░▌ ▀▀▀▀▀▀▀▀▀█░▌
@@ -1245,8 +1373,8 @@ def Cointing(credits):
                                               ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀ 
                                                                        """
 
-          if int(credits) > 32:
-               middle = """
+    if int(credits) > 32:
+        middle = """
                                               ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄ 
                                              ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
                                              ▐░█▀▀▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀█░▌
@@ -1259,14 +1387,13 @@ def Cointing(credits):
                                              ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
                                               ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀ """
 
-
-          top = """
+    top = """
  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄ 
 ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀ """
 
-          if int(credits) >= 2:
-               bottom = """
+    if int(credits) >= 2:
+        bottom = """
                           ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄        ▄  ▄▄▄▄▄▄▄▄▄▄▄                            
                          ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░▌      ▐░▌▐░░░░░░░░░░░▌                           
                          ▐░█▀▀▀▀▀▀▀▀▀ ▐░█▀▀▀▀▀▀▀█░▌ ▀▀▀▀█░█▀▀▀▀ ▐░▌░▌     ▐░▌▐░█▀▀▀▀▀▀▀▀▀                            
@@ -1283,9 +1410,8 @@ def Cointing(credits):
  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀ 
 """
 
-
-          elif int(credits) == 0:
-               bottom = """
+    elif int(credits) == 0:
+        bottom = """
  ▄            ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄       ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄        ▄ 
 ▐░▌          ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌     ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░▌      ▐░▌
 ▐░▌          ▐░█▀▀▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀▀▀  ▀▀▀▀█░█▀▀▀▀      ▐░█▀▀▀▀▀▀▀▀▀ ▐░█▀▀▀▀▀▀▀█░▌ ▀▀▀▀█░█▀▀▀▀ ▐░▌░▌     ▐░▌
@@ -1303,8 +1429,8 @@ def Cointing(credits):
 ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀ 
                                                                                                                      """
-          else:
-               bottom = """
+    else:
+        bottom = """
                                     ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄        ▄                               
                                    ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░▌      ▐░▌                              
                                    ▐░█▀▀▀▀▀▀▀▀▀ ▐░█▀▀▀▀▀▀▀█░▌ ▀▀▀▀█░█▀▀▀▀ ▐░▌░▌     ▐░▌                              
@@ -1320,272 +1446,348 @@ def Cointing(credits):
 ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀ 
                                                                                                                      """
-          print(top)
-          print(middle)
-          print(bottom)
-          return
+    print(top)
+    print(middle)
+    print(bottom)
+    return
 
-def  ParseConf():
-     global GlobStart
-     global GlobExit
 
-     try:
-          with open(DirData+"sneaver.conf","r") as conf:
-               for setting in conf:
-                    if "ExitEmu" in setting and "J00:B" in setting:
-                         GlobExit = setting.split(" = ExitEmu")[0].replace("J00:B","")
-                    if "Joypad1 Start" in setting:
-                         GlobStart = setting.split(" = Joypad1 Start")[0].replace("J00:B","")
-     except Exception as e:
-          Pfig("Error:"+str(e))
-          GetOut()
+def ParseConf():
+    global GlobStart
+    global GlobSelect
+    global GlobExit
+
+    try:
+        with open(DirData + "sneaver.conf", "r") as conf:
+            for setting in conf:
+                if "ExitEmu" in setting and "J00:B" in setting:
+                    GlobExit = setting.split(" = ExitEmu")[0].replace("J00:B", "")
+                if "Joypad1 Start" in setting:
+                    GlobStart = setting.split(" = Joypad1 Start")[0].replace(
+                        "J00:B", ""
+                    )
+                if "Joypad1 Select" in setting:
+                    GlobSelect = setting.split(" = Joypad1 Select")[0].replace(
+                        "J00:B", ""
+                    )
+    except Exception as e:
+        Pfig("Error:" + str(e))
+        GetOut()
 
 
 def ManualExit():
-     pygame.init()
-     Loop = 0
-     PushedCnt = 0
-     Exit = GlobExit
+    pygame.init()
+    Loop = 0
+    PushedCnt = 0
+    Exit = GlobExit
 
-     try:
-         joypad1 = pygame.joystick.Joystick(0)
-         joypad1.init()
-     except Exception as e:
-         if str(e) == "Invalid joystick device number":
-            Pfig("\nNo gamepad have been found .\n\nIs it connected ? \nHere is what iv found :\n\n")
+    try:
+        joypad1 = pygame.joystick.Joystick(0)
+        joypad1.init()
+    except Exception as e:
+        if str(e) == "Invalid joystick device number":
+            Pfig(
+                "\nNo gamepad have been found .\n\nIs it connected ? \nHere is what iv found :\n\n"
+            )
             for device in devices:
                 print(device)
-         else:
-            Pfig("\nError :"+str(e))
-     try:
+        else:
+            Pfig("\nError :" + str(e))
+    try:
         while Loop <= 200:
-          events = pygame.event.get()
-          for event in events:
+            events = pygame.event.get()
+            for event in events:
 
-              try:
-                   checksnes9x= int(subprocess.check_output(["pidof","-s","snes9x"]))
-              except Exception as e:
-                         if "returned non-zero exit status 1" in str(e):
-                              return False
-                         else:
-                              Pfig("Proc/Status Error:"+str(e))
+                try:
+                    checksnes9x = int(
+                        subprocess.check_output(["pidof", "-s", "snes9x"])
+                    )
+                except Exception as e:
+                    if "returned non-zero exit status 1" in str(e):
+                        return False
+                    else:
+                        Pfig("Proc/Status Error:" + str(e))
 
-              if event.type == pygame.JOYBUTTONUP:
-                         if str(event.button) == str(Exit): 
-                              if PushedCnt >= 3:
-                                        return True
-                              else:
-                                        PushedCnt = PushedCnt + 1
-              else:
+                if event.type == pygame.JOYBUTTONUP:
+                    if str(event.button) == str(Exit):
+                        if PushedCnt >= 3:
+                            return True
+                        else:
+                            PushedCnt = PushedCnt + 1
+                else:
                     Loop = Loop + 1
 
-     except Exception as e:
-          Pfig("Error:"+str(e))
+    except Exception as e:
+        Pfig("Error:" + str(e))
 
-     return False
-
-
-def PressStart():
-     global CHECKPOINT
-
-     CHECKPOINT = 0
-
-     pygame.init()
-     Start = GlobStart
-
-     time.sleep(1)
-     print("""
+    return False
 
 
-                                                                                                                                                            
-                                                                                                                                                            
-                                                                                                                                                            
-                                                                                                                                                            
- ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄ 
-▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
- ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀ 
-              ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄       ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄         
-             ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌     ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌        
-             ▐░█▀▀▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀▀▀ ▐░█▀▀▀▀▀▀▀▀▀ ▐░█▀▀▀▀▀▀▀▀▀      ▐░█▀▀▀▀▀▀▀▀▀  ▀▀▀▀█░█▀▀▀▀ ▐░█▀▀▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀█░▌ ▀▀▀▀█░█▀▀▀▀         
-             ▐░▌       ▐░▌▐░▌       ▐░▌▐░▌          ▐░▌          ▐░▌               ▐░▌               ▐░▌     ▐░▌       ▐░▌▐░▌       ▐░▌     ▐░▌             
- ▄▄▄▄▄▄▄▄▄▄▄ ▐░█▄▄▄▄▄▄▄█░▌▐░█▄▄▄▄▄▄▄█░▌▐░█▄▄▄▄▄▄▄▄▄ ▐░█▄▄▄▄▄▄▄▄▄ ▐░█▄▄▄▄▄▄▄▄▄      ▐░█▄▄▄▄▄▄▄▄▄      ▐░▌     ▐░█▄▄▄▄▄▄▄█░▌▐░█▄▄▄▄▄▄▄█░▌     ▐░▌ ▄▄▄▄▄▄▄▄▄▄▄ 
-▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌     ▐░░░░░░░░░░░▌     ▐░▌     ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌     ▐░▌▐░░░░░░░░░░░▌
- ▀▀▀▀▀▀▀▀▀▀▀ ▐░█▀▀▀▀▀▀▀▀▀ ▐░█▀▀▀▀█░█▀▀ ▐░█▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀█░▌ ▀▀▀▀▀▀▀▀▀█░▌      ▀▀▀▀▀▀▀▀▀█░▌     ▐░▌     ▐░█▀▀▀▀▀▀▀█░▌▐░█▀▀▀▀█░█▀▀      ▐░▌ ▀▀▀▀▀▀▀▀▀▀▀ 
-             ▐░▌          ▐░▌     ▐░▌  ▐░▌                    ▐░▌          ▐░▌               ▐░▌     ▐░▌     ▐░▌       ▐░▌▐░▌     ▐░▌       ▐░▌             
-             ▐░▌          ▐░▌      ▐░▌ ▐░█▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄█░▌ ▄▄▄▄▄▄▄▄▄█░▌      ▄▄▄▄▄▄▄▄▄█░▌     ▐░▌     ▐░▌       ▐░▌▐░▌      ▐░▌      ▐░▌             
-             ▐░▌          ▐░▌       ▐░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌     ▐░░░░░░░░░░░▌     ▐░▌     ▐░▌       ▐░▌▐░▌       ▐░▌     ▐░▌             
-              ▀            ▀         ▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀       ▀▀▀▀▀▀▀▀▀▀▀       ▀       ▀         ▀  ▀         ▀       ▀              
- ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄ 
-▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
- ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀ 
+def PressStart(gamename):
+    global CHECKPOINT
 
-""")
+    CHECKPOINT = 0
+
+    pygame.init()
+
+    Start = GlobStart
+    Select = GlobSelect
+
+    time.sleep(1)
+    print(
+        """
 
 
+█████ █████ █████ █████ █████ █████ █████ █████ █████ █████ █████ █████ █████ █████ █████ █████ █████ 
 
+██     ██████  ██████  ███████ ███████ ███████       ███████ ████████  █████  ██████  ████████      █ 
+██     ██   ██ ██   ██ ██      ██      ██            ██         ██    ██   ██ ██   ██    ██         █ 
+██     ██████  ██████  █████   ███████ ███████ █████ ███████    ██    ███████ ██████     ██         █ 
+██     ██      ██   ██ ██           ██      ██            ██    ██    ██   ██ ██   ██    ██         █ 
+██     ██      ██   ██ ███████ ███████ ███████       ███████    ██    ██   ██ ██   ██    ██         █ 
 
-     try:
-         joypad1 = pygame.joystick.Joystick(0)
-         joypad1.init()
-     except Exception as e:
-         if str(e) == "Invalid joystick device number":
-            Pfig("\nNo gamepad have been found .\n\nIs it connected ? \nHere is what iv found :\n\n")
+█████ █████ █████ █████ █████ █████ █████ █████ █████ █████ █████ █████ █████ █████ █████ █████ █████ 
+"""
+    )
+    Pfig("-(Start) To play:-")
+    print(gamename)
+    print(
+        """ 
+█████ █████ █████ █████ █████ █████ █████ █████ █████ █████ █████ █████ █████ █████ █████ █████ █████ █████
+
+██     ██████  ██████  ███████ ███████ ███████     ███████ ███████ ██      ███████  ██████ ████████      █ 
+██     ██   ██ ██   ██ ██      ██      ██          ██      ██      ██      ██      ██         ██         █ 
+██     ██████  ██████  █████   ███████ ███████     ███████ █████   ██      █████   ██         ██         █ 
+██     ██      ██   ██ ██           ██      ██          ██ ██      ██      ██      ██         ██         █ 
+██     ██      ██   ██ ███████ ███████ ███████     ███████ ███████ ███████ ███████  ██████    ██         █ 
+
+█████ █████ █████ █████ █████ █████ █████ █████ █████ █████ █████ █████ █████ █████ █████ █████ █████ █████
+"""
+    )
+    Pfig("-(SELECT) To choose another game-")
+
+    try:
+        joypad1 = pygame.joystick.Joystick(0)
+        joypad1.init()
+    except Exception as e:
+        if str(e) == "Invalid joystick device number":
+            Pfig(
+                "\nNo gamepad have been found .\n\nIs it connected ? \nHere is what iv found :\n\n"
+            )
             for device in devices:
                 print(device)
-         else:
-            Pfig("\nError :"+str(e))
-         GetOut()
-     try:
-        while True: 
-          events = pygame.event.get()
-          for event in events:
-              if event.type == pygame.JOYBUTTONUP:
-                    if str(event.button) == str(Start): 
-                         GifLauncher("NewGame")
-                         return
-     except Exception as e:
-          Pfig("Error:"+str(e))
-          GetOut()
+        else:
+            Pfig("\nError :" + str(e))
+        GetOut()
+    try:
+        while True:
+            events = pygame.event.get()
+            for event in events:
+                if event.type == pygame.JOYBUTTONUP:
+                    if str(event.button) == str(Start):
+                        GifLauncher("NewGame")
+                        return True
+                    if str(event.button) == str(Select):
+                        GifLauncher("InsertCoin")
+                        return False
+                elif event.type == pygame.JOYBUTTONDOWN:
+                    if str(event.button) == str(Start):
+                        GifLauncher("NewGame")
+                        return True
+                    if str(event.button) == str(Select):
+                        GifLauncher("InsertCoin")
+                        return False
+    #                    else:
+    #                         print("full ev:",event)
+    #                         print("ev.b:",str(event.button))
+    #                         print("strSelect:",str(Select))
+    #                         print("len ev.b:",len(str(event.button)))
+    #                         print("len select:",len(str(Select)))
+    except Exception as e:
+        Pfig("Error:" + str(e))
+        GetOut()
+
 
 def Configuration():
-     next = False
+    next = False
 
-     joymap = {
-         "Start":"",
-         "Select":"",
-         "Up":"",
-         "Down":"",
-         "Right":"",
-         "Left":"",
-         "BtnA":"",
-         "BtnB":"",
-         "BtnX":"",
-         "BtnY":"",
-         "BtnL":"",
-         "BtnR":"",
-         "BtExit":""
-          }
+    joymap = {
+        "Start": "",
+        "Select": "",
+        "Up": "",
+        "Down": "",
+        "Right": "",
+        "Left": "",
+        "BtnA": "",
+        "BtnB": "",
+        "BtnX": "",
+        "BtnY": "",
+        "BtnL": "",
+        "BtnR": "",
+        "BtExit": "",
+    }
 
-     joymap2 = {
-         "Start":"",
-         "Select":"",
-         "Up":"",
-         "Down":"",
-         "Right":"",
-         "Left":"",
-         "BtnA":"",
-         "BtnB":"",
-         "BtnX":"",
-         "BtnY":"",
-         "BtnL":"",
-         "BtnR":"",
-         "BtExit":""
-          }
+    joymap2 = {
+        "Start": "",
+        "Select": "",
+        "Up": "",
+        "Down": "",
+        "Right": "",
+        "Left": "",
+        "BtnA": "",
+        "BtnB": "",
+        "BtnX": "",
+        "BtnY": "",
+        "BtnL": "",
+        "BtnR": "",
+        "BtExit": "",
+    }
 
-     if os.path.exists("/dev/input/js0") == False and os.path.exists("/dev/input/js1") == False:
-            Pfig("\nNo gamepad have been found .\n\nIs it connected ? \nHere is what iv found :\n\n")
-            for device in devices:
-                print(device)
-            Pfig("\nIf this error persist you may have to edit sneaver.conf yourself sorry.\n")
-            GetOut()
+    if (
+        os.path.exists("/dev/input/js0") == False
+        and os.path.exists("/dev/input/js1") == False
+    ):
+        Pfig(
+            "\nNo gamepad have been found .\n\nIs it connected ? \nHere is what iv found :\n\n"
+        )
+        for device in devices:
+            print(device)
+        Pfig(
+            "\nIf this error persist you may have to edit sneaver.conf yourself sorry.\n"
+        )
+        GetOut()
 
+    if which("jstest") != True:
+        Pfig("\njstest is not found please install : apt install joystick")
+        GetOut()
+    if which("sxiv") != True:
+        Pfig("\nunbuffer is not found please install : apt install except")
+        GetOut()
 
-     Pfig("\nOk lets Configure Joypad 1:\n\n")
+    Pfig("\nOk lets Configure Joypad 1:\n\n")
 
+    if os.path.exists("/dev/input/js0") == True:
+        for button, code in joymap.items():
+            next = False
+            if str(button) == "BtExit":
+                Pfig("Please press a button to close Snes9x emulator.")
+            else:
+                Pfig("Please press a button for " + str(button) + " :\n\n")
+            proc = subprocess.Popen(
+                ["unbuffer", "jstest", "--select", "/dev/input/js0"],
+                bufsize=1,
+                universal_newlines=True,
+                stdout=subprocess.PIPE,
+            )
+            while next == False:
+                for line in proc.stdout:
+                    proc.send_signal(signal.SIGSTOP)
+                    if "type 1," in line or "type 2," in line:
+                        if "value" in line:
+                            p = re.compile(
+                                "number (\d+)?,",
+                            )
+                            num = p.findall(line)[0]
+                            print("\nYou've just pressed Button Nbr :" + num + "\n")
+                            confirm = input("\nIs this correct ?(y/n) :")
+                            try:
+                                if "y" in confirm.lower():
+                                    Pfig("\nMapping key ..\n\n")
+                                    joymap[button] = str(num)
+                                    next = True
+                                    proc.terminate()
+                                    break
+                                else:
+                                    Pfig(
+                                        "\nOk then Please press a button for "
+                                        + str(button)
+                                        + ": \n\n"
+                                    )
+                                    proc.send_signal(signal.SIGCONT)
+                            except:
+                                Pfig(
+                                    "Ok then Please press a button for  "
+                                    + str(button)
+                                    + ":\n\n"
+                                )
+                                proc.send_signal(signal.SIGCONT)
 
-     if os.path.exists("/dev/input/js0") == True:
-       for button,code in joymap.items():
-        next = False
-        if str(button) == "BtExit":
-               Pfig("Please press a button to close Snes9x emulator.")
-        else:
-             Pfig("Please press a button for "+ str(button) + " :\n\n")
-        proc = subprocess.Popen(["unbuffer","jstest", "--select","/dev/input/js0"],bufsize=1, universal_newlines=True, stdout=subprocess.PIPE)
-        while next == False: 
-          for line in proc.stdout:
-               proc.send_signal(signal.SIGSTOP)
-               if "type 1," in line or "type 2," in line:
-                    if "value 1" in line:
-                              p = re.compile("number (\d+)?,",)
-                              num = p.findall(line)[0]
-                              print("\nYou've just pressed Button Nbr :"+num+"\n")
-                              confirm = input("\nIs this correct ?(y/n) :")
-                              try:
-                                   if "y" in confirm.lower():
-                                        Pfig("\nMapping key ..\n\n")
-                                        joymap[button] = str(num)
-                                        next = True
-                                        proc.terminate()
-                                        break
-                                   else:
-                                        Pfig("\nOk then Please press a button for "+ str(button) + ": \n\n")
-                                        proc.send_signal(signal.SIGCONT)
-                              except:
-                                        Pfig("Ok then Please press a button for  "+ str(button) + ":\n\n")
-                                        proc.send_signal(signal.SIGCONT)
-
+                        else:
+                            proc.send_signal(signal.SIGCONT)
                     else:
-                         proc.send_signal(signal.SIGCONT)
-               else:
-                    proc.send_signal(signal.SIGCONT) 
+                        proc.send_signal(signal.SIGCONT)
 
+        Pfig("\nOk here is the config for Joypad 1:\n\n")
+        for button, code in joymap.items():
+            print("Button %s = code %s" % (button, code))
+        print("\n\n")
 
-       Pfig("\nOk here is the config for Joypad 1:\n\n")
-       for button,code in joymap.items():
-          print("Button %s = code %s"%(button,code))
-       print("\n\n")
+    if os.path.exists("/dev/input/js1") == True:
+        question = input("Do you want to configure Joypad 2(Y/N):")
+    else:
+        question = "n"
 
-     if os.path.exists("/dev/input/js1") == True:
-          question = input("Do you want to configure Joypad 2(Y/N):")
-     else:
-          question = "n"
+    if "y" in question.lower():
 
-     if "y" in question.lower():
+        for button, code in joymap2.items():
+            next = False
+            if str(button) == "BtExit":
+                Pfig("Please press a button to close Snes9x emulator.")
+            else:
+                Pfig("Please press a button for " + str(button) + " :\n\n")
+            proc = subprocess.Popen(
+                ["unbuffer", "jstest", "--select", "/dev/input/js1"],
+                bufsize=1,
+                universal_newlines=True,
+                stdout=subprocess.PIPE,
+            )
+            while next == False:
+                for line in proc.stdout:
+                    proc.send_signal(signal.SIGSTOP)
+                    if "type 1," in line or "type 2," in line:
+                        if "value 1" in line:
+                            p = re.compile(
+                                "number (\d+)?,",
+                            )
+                            num = p.findall(line)[0]
+                            print("\nYou've just pressed Button Nbr :" + num + "\n")
+                            confirm = input("\nIs this correct ?(y/n) :")
+                            try:
+                                if "y" in confirm.lower():
+                                    Pfig("\nMapping key ..\n\n")
+                                    joymap2[button] = str(num)
+                                    next = True
+                                    proc.terminate()
+                                    break
+                                else:
+                                    Pfig(
+                                        "\nOk then Please press a button for "
+                                        + str(button)
+                                        + ": \n\n"
+                                    )
+                                    proc.send_signal(signal.SIGCONT)
+                            except:
+                                Pfig(
+                                    "Ok then Please press a button for  "
+                                    + str(button)
+                                    + ":\n\n"
+                                )
+                                proc.send_signal(signal.SIGCONT)
 
-       for button,code in joymap2.items():
-        next = False
-        if str(button) == "BtExit":
-               Pfig("Please press a button to close Snes9x emulator.")
-        else:
-             Pfig("Please press a button for "+ str(button) + " :\n\n")
-        proc = subprocess.Popen(["unbuffer","jstest", "--select","/dev/input/js1"],bufsize=1, universal_newlines=True, stdout=subprocess.PIPE)
-        while next == False: 
-          for line in proc.stdout:
-               proc.send_signal(signal.SIGSTOP)
-               if "type 1," in line or "type 2," in line:
-                    if "value 1" in line:
-                              p = re.compile("number (\d+)?,",)
-                              num = p.findall(line)[0]
-                              print("\nYou've just pressed Button Nbr :"+num+"\n")
-                              confirm = input("\nIs this correct ?(y/n) :")
-                              try:
-                                   if "y" in confirm.lower():
-                                        Pfig("\nMapping key ..\n\n")
-                                        joymap2[button] = str(num)
-                                        next = True
-                                        proc.terminate()
-                                        break
-                                   else:
-                                        Pfig("\nOk then Please press a button for "+ str(button) + ": \n\n")
-                                        proc.send_signal(signal.SIGCONT)
-                              except:
-                                        Pfig("Ok then Please press a button for  "+ str(button) + ":\n\n")
-                                        proc.send_signal(signal.SIGCONT)
-
+                        else:
+                            proc.send_signal(signal.SIGCONT)
                     else:
-                         proc.send_signal(signal.SIGCONT)
-               else:
-                    proc.send_signal(signal.SIGCONT)
+                        proc.send_signal(signal.SIGCONT)
 
+        print("\nOk here are the config for Joypad 2:\n\n")
+        for button, code in joymap2.items():
+            print("Button %s = code %s" % (button, code))
+    else:
+        joymap2 = joymap
+    print()
 
-       print("\nOk here are the config for Joypad 2:\n\n")
-       for button,code in joymap2.items():
-               print("Button %s = code %s"%(button,code))
-     else:
-          joymap2 = joymap
-     print()
-
-     Snes9xConf = """#-----------------------------------------
+    Snes9xConf = (
+        """#-----------------------------------------
 # snes9x.conf : Snes9x Configuration file
 #   With Real Chunks Of Sneaver In It
 #-----------------------------------------
@@ -1665,7 +1867,9 @@ Debugger = TRUE
 Trace = TRUE
 
 [Unix]
-BaseDir = """+str(DirData)+"""
+BaseDir = """
+        + str(DirData)
+        + """
 EnableGamePad = True
 PadDevice1 = /dev/input/js0
 PadDevice2 = /dev/input/js1
@@ -1689,532 +1893,911 @@ VideoMode = 1
 #Controller 1
 J00:Axis1 = Joypad1 Axis Up/Down T=50%
 J00:Axis0 = Joypad1 Axis Left/Right T=50%
-J00:B"""+str(joymap["Up"])+""" = Joypad1 Up
-J00:B"""+str(joymap["Down"])+""" = Joypad1 Down
-J00:B"""+str(joymap["Left"])+""" = Joypad1 Left
-J00:B"""+str(joymap["Right"])+""" = Joypad1 Right
-J00:B"""+str(joymap["BtnA"])+""" = Joypad1 A
-J00:B"""+str(joymap["BtnB"])+""" = Joypad1 B
-J00:B"""+str(joymap["BtnX"])+""" = Joypad1 X
-J00:B"""+str(joymap["BtnY"])+""" = Joypad1 Y
-J00:B"""+str(joymap["BtnL"])+""" = Joypad1 L
-J00:B"""+str(joymap["BtnR"])+""" = Joypad1 R
-J00:B"""+str(joymap["Select"])+""" = Joypad1 Select
-J00:B"""+str(joymap["Start"])+""" = Joypad1 Start
-J00:B"""+str(joymap["BtExit"])+""" = ExitEmu
+J00:B"""
+        + str(joymap["Up"])
+        + """ = Joypad1 Up
+J00:B"""
+        + str(joymap["Down"])
+        + """ = Joypad1 Down
+J00:B"""
+        + str(joymap["Left"])
+        + """ = Joypad1 Left
+J00:B"""
+        + str(joymap["Right"])
+        + """ = Joypad1 Right
+J00:B"""
+        + str(joymap["BtnA"])
+        + """ = Joypad1 A
+J00:B"""
+        + str(joymap["BtnB"])
+        + """ = Joypad1 B
+J00:B"""
+        + str(joymap["BtnX"])
+        + """ = Joypad1 X
+J00:B"""
+        + str(joymap["BtnY"])
+        + """ = Joypad1 Y
+J00:B"""
+        + str(joymap["BtnL"])
+        + """ = Joypad1 L
+J00:B"""
+        + str(joymap["BtnR"])
+        + """ = Joypad1 R
+J00:B"""
+        + str(joymap["Select"])
+        + """ = Joypad1 Select
+J00:B"""
+        + str(joymap["Start"])
+        + """ = Joypad1 Start
+J00:B"""
+        + str(joymap["BtExit"])
+        + """ = ExitEmu
 
 
 #Controller 2
 J01:Axis1 = Joypad2 Axis Up/Down T=50%
 J01:Axis0 = Joypad2 Axis Left/Right T=50%
-J01:B"""+str(joymap2["Up"])+""" = Joypad2 Up
-J01:B"""+str(joymap2["Down"])+""" = Joypad2 Down
-J01:B"""+str(joymap2["Left"])+""" = Joypad2 Left
-J01:B"""+str(joymap2["Right"])+""" = Joypad2 Right
-J01:B"""+str(joymap2["BtnA"])+""" = Joypad2 A
-J01:B"""+str(joymap2["BtnB"])+""" = Joypad2 B
-J01:B"""+str(joymap2["BtnX"])+""" = Joypad2 X
-J01:B"""+str(joymap2["BtnY"])+""" = Joypad2 Y
-J01:B"""+str(joymap2["BtnL"])+""" = Joypad2 L
-J01:B"""+str(joymap2["BtnR"])+""" = Joypad2 R
-J01:B"""+str(joymap2["Select"])+""" = Joypad2 Select
-J01:B"""+str(joymap2["Start"])+""" = Joypad2 Start
-J01:B"""+str(joymap2["BtExit"])+""" = ExitEmu 
+J01:B"""
+        + str(joymap2["Up"])
+        + """ = Joypad2 Up
+J01:B"""
+        + str(joymap2["Down"])
+        + """ = Joypad2 Down
+J01:B"""
+        + str(joymap2["Left"])
+        + """ = Joypad2 Left
+J01:B"""
+        + str(joymap2["Right"])
+        + """ = Joypad2 Right
+J01:B"""
+        + str(joymap2["BtnA"])
+        + """ = Joypad2 A
+J01:B"""
+        + str(joymap2["BtnB"])
+        + """ = Joypad2 B
+J01:B"""
+        + str(joymap2["BtnX"])
+        + """ = Joypad2 X
+J01:B"""
+        + str(joymap2["BtnY"])
+        + """ = Joypad2 Y
+J01:B"""
+        + str(joymap2["BtnL"])
+        + """ = Joypad2 L
+J01:B"""
+        + str(joymap2["BtnR"])
+        + """ = Joypad2 R
+J01:B"""
+        + str(joymap2["Select"])
+        + """ = Joypad2 Select
+J01:B"""
+        + str(joymap2["Start"])
+        + """ = Joypad2 Start
+J01:B"""
+        + str(joymap2["BtExit"])
+        + """ = ExitEmu 
 
 K00:Escape = ExitEmu
 K00:Insert = QuickSave000
 
 #Full config list :  https://github.com/snes9xgit/snes9x/blob/master/unix/snes9x.conf.default
 """
-     RwFile("sneaver.conf",Snes9xConf,"w")
-     GetOut()
+    )
+    RwFile("sneaver.conf", Snes9xConf, "w")
+    GetOut()
 
-def Rename(name,srcdir):
 
-  badchar= ["(",")","[","!","]"," ","_","--","'",'"',",","&"]
+def Rename(name, srcdir):
 
-  mv = False
-  for char in badchar:
-     if char in name:
-          mv = True
-  if mv == True:
-     print("Renaming : ",name)
-     newname = name.replace("&","-").replace("(","-").replace(")","-").replace("[","-").replace("!","-").replace("]","").replace(" ","-").replace("_","-").replace("'","-").replace('"',"-").replace(",","-").replace("--","-")
-     newname = newname.replace("---","-").replace("--","-")
-     os.rename(srcdir+name,srcdir+newname)
-     print("\nNew Name is : ",newname)
+    badchar = ["(", ")", "[", "!", "]", " ", "_", "--", "'", '"', ",", "&"]
+
+    mv = False
+    for char in badchar:
+        if char in name:
+            mv = True
+    if mv == True:
+        print("Renaming : ", name)
+        newname = (
+            name.replace("&", "-")
+            .replace("(", "-")
+            .replace(")", "-")
+            .replace("[", "-")
+            .replace("!", "-")
+            .replace("]", "")
+            .replace(" ", "-")
+            .replace("_", "-")
+            .replace("'", "-")
+            .replace('"', "-")
+            .replace(",", "-")
+            .replace("--", "-")
+        )
+        newname = newname.replace("---", "-").replace("--", "-")
+        os.rename(srcdir + name, srcdir + newname)
+        print("\nNew Name is : ", newname)
 
 
 def ScreenResize(mode):
 
-     global OLDSCREEN
-     global NEWRES
+    global OLDSCREEN
+    global NEWSCREEN
+    global NEWRES
 
-     if mode == "change":
-         OLDSCREEN = ""
-         xrandr = subprocess.Popen("xrandr",shell=True,stdout=subprocess.PIPE)
-         xout = str(xrandr.communicate()[0])
-         reslist = []
-         NEWRES = ""
-         goodone = False
+    if mode == "change":
 
-         if "connected primary" in xout:
-              device = str(xout.split("connected primary")[0].split("\\n")[-1]).replace(" ","")
-              xit = "".join(xout.split("connected primary")[1]).split("\\n")
+        if OLDSCREEN != "" and NEWSCREEN != "" and NEWRES != "":
+            Pfig("\n-Changing Screen Resolution now-\n")
+            Pfig(NEWSCREEN)
+            print()
+            xrandr = subprocess.Popen(str(NEWSCREEN), shell=True)
+            return
 
-         for item in xit:
-              if item.startswith(" ")== True :
+        xrandr = subprocess.Popen("xrandr", shell=True, stdout=subprocess.PIPE)
+        xout = str(xrandr.communicate()[0])
+        reslist = []
+        NEWRES = ""
+        goodone = False
 
-                   if "(" not in item:
+        if "connected primary" in xout:
+            device = str(xout.split("connected primary")[0].split("\\n")[-1]).replace(
+                " ", ""
+            )
+            xit = "".join(xout.split("connected primary")[1]).split("\\n")
 
-                        if "*" in item:
-                             tmp = item.split("x")
-                             height = tmp[0]
-                             width = tmp[1].split(" ")[0]
-                             res = str(str(height)+"x"+str(width)).replace(" ","")
+        for item in xit:
+            if item.startswith(" ") == True:
+
+                if "(" not in item:
+
+                    if "*" in item:
+                        tmp = item.split("x")
+                        height = tmp[0]
+                        width = tmp[1].split(" ")[0]
+                        res = str(str(height) + "x" + str(width)).replace(" ", "")
+                    else:
+
+                        if "640x480" in item:
+                            NEWSCREEN = "xrandr --output " + device + " --mode 640x480"
+                            NEWRES = "640x480"
+                            goodone = True
                         else:
+                            regex = re.compile(r"\d+[x]\d+")
+                            bingo = regex.search(item)
 
-                             if "640x480" in item:
-                                  newscreen = "xrandr --output "+device+" --mode 640x480"
-                                  NEWRES = "640x480"
-                                  goodone = True
-                             else:
-                                  regex = re.compile(r'\d+[x]\d+')
-                                  bingo =regex.search(item)
+                            if bingo:
+                                if not bingo.group() in reslist:
+                                    reslist.append(bingo.group())
+            else:
+                break
 
-                                  if bingo:
-                                       if not bingo.group() in reslist:
-                                            reslist.append(bingo.group())
-              else:
-                   break
+        if goodone == False:
+            sorting = []
+            for resolution in reslist:
+                tmp = resolution.split("x")[0]
+                sorting.append(tmp)
+            sorting.sort(key=int)
+            minwidth = sorting[0]
 
-         if goodone == False:
-              sorting =[]
-              for resolution in reslist:
-                   tmp = resolution.split("x")[0]
-                   sorting.append(tmp)
-              sorting.sort(key=int)
-              minwidth = sorting[0]
+            for resolution in reslist:
+                if resolution.startswith(minwidth) == True:
+                    NEWSCREEN = (
+                        "xrandr --output " + device + " --mode " + str(resolution)
+                    )
+                    NEWRES = str(resolution)
 
-              for resolution in reslist:
-                   if resolution.startswith(minwidth) == True:
-                        newscreen = "xrandr --output "+device+" --mode "+ str(resolution)
-                        NEWRES = str(resolution)
-                        break
+                    break
 
+        Pfig("\n-Saving Current Screen Config-\n")
+        OLDSCREEN = "xrandr --output " + device + " --mode " + res
+        Pfig(OLDSCREEN)
 
-         Pfig("\n-Saving Current Screen Config-\n")
-         OLDSCREEN = "xrandr --output "+device+" --mode "+res
-         Pfig(OLDSCREEN)
+        Pfig("\n-Changing Screen Resolution now-\n")
+        Pfig(NEWSCREEN)
+        print()
 
+        xrandr = subprocess.Popen(str(NEWSCREEN), shell=True)
 
-         Pfig("\n-Changing Screen Resolution now-\n")
-         Pfig(newscreen)
-         print()
+    if mode == "revert":
+        if OLDSCREEN != "" and NEWSCREEN != "" and NEWRES != "":
+            xrandr = subprocess.Popen(str(OLDSCREEN), shell=True)
+            return
+        NEWRES = ""
+        xrandr = subprocess.Popen(str(OLDSCREEN), shell=True)
 
-         xrandr = subprocess.Popen(str(newscreen),shell=True)
+    if mode == "height":
+        height = "640"
+        xrandr = subprocess.Popen("xrandr", shell=True, stdout=subprocess.PIPE)
+        xout = str(xrandr.communicate()[0])
 
-     if mode == "revert":
-         NEWRES = ""
-         xrandr = subprocess.Popen(str(OLDSCREEN),shell=True)
+        if "connected primary" in xout:
+            device = str(xout.split("connected primary")[0].split("\\n")[-1]).replace(
+                " ", ""
+            )
+            xit = "".join(xout.split("connected primary")[1]).split("\\n")
 
-     if mode =="height":
-         height = "640"
-         xrandr = subprocess.Popen("xrandr",shell=True,stdout=subprocess.PIPE)
-         xout = str(xrandr.communicate()[0])
+        for item in xit:
+            if item.startswith(" ") == True:
 
-         if "connected primary" in xout:
-              device = str(xout.split("connected primary")[0].split("\\n")[-1]).replace(" ","")
-              xit = "".join(xout.split("connected primary")[1]).split("\\n")
+                if "(" not in item:
 
-         for item in xit:
-              if item.startswith(" ")== True :
+                    if "*" in item:
+                        tmp = item.split("x")
+                        height = tmp[0]
+        return height
 
-                   if "(" not in item:
-
-                        if "*" in item:
-                             tmp = item.split("x")
-                             height = tmp[0]
-         return height
 
 def BlackList():
-          global BADROMS
+    global BADROMS
+    global LASTBAD
+
+    BADROMS = RwFile("bad.roms", None, "r")
+
+    try:
+        if LASTBAD != BADROMS:
+            Pfig(str(len(BADROMS)) + " Roms Blacklisted .\n\n")
+            LASTBAD = BADROMS
+    except Exception as e:
+        print("Error:", e)
+        BADROMS = []
+        Pfig("0 Roms Blacklisted .\n\n")
 
 
-          BADROMS = RwFile("bad.roms",None,"r")
-          try:
-               Pfig(str(len(BADROMS)) + " Roms Blacklisted .\n\n")
-          except:
-               BADROMS = []
-               Pfig("0 Roms Blacklisted .\n\n")
+def Speaker():
+    cmd = "pacmd list-sources"
+    cmd = cmd.split(" ")
+    answer = subprocess.check_output(cmd).decode(errors="ignore")
+
+    if "index:" in answer:
+        answersplit = answer.split("index:")
+        for line in answersplit:
+            line = [l.strip("\n") for l in line.splitlines() if l.strip()]
+            devname = ""
+            for l in line:
+                if "name: <" in l:
+                    devname = l.strip().split("name: <")[1][:-1]
+                    if "monitor" in devname:
+                        return devname
+                if "microphone" in l.lower():
+                    devname = ""
+                    break
+
+        print("Couldn't find current soundcard output Using default recording device")
+        return "default"
+
+
+def CompressVids():
+
+    global KILLLOAD
+
+    Pfig("\n-Compressing videos files found in compress.video-\n")
+    VidLst = RwFile("compress.video", None, "r")
+    if len(VidLst) > 0:
+        Pfig("\n-%s videos files in compress.video-\n" % len(VidLst))
+        time.sleep(1)
+    else:
+        Pfig("\n-No video found to be compressed-\n")
+        time.sleep(1)
+        return ()
+    for vfile in VidLst:
+        if len(vfile) > 2:
+            GifLauncher("Loading")
+
+            cmd = (
+                "ffmpeg -i "
+                + vfile
+                + " -acodec libvorbis -ab 128k -ac 2 -vcodec libx264 -preset superfast -crf 32 -maxrate 400k -bufsize 400k -threads 1 -stats "
+                + vfile.replace(".mkv", ".mp4")
+            )
+            print(cmd)
+            #              ffmpeg = subprocess.Popen(cmd,shell=True)
+            ffmpeg = subprocess.Popen(
+                cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            )
+            output, error = ffmpeg.communicate()
+            fout = output.decode()
+
+            if "No such file or directory" in fout:
+                Pfig("!!!!!!!!!!!\nError while Trying to Open File!!\n!!!!!!!!!!!\n")
+                ffmpeg.terminate()
+                cmd = "pkill ffmpeg"
+                pkill = subprocess.Popen(cmd, shell=True)
+
+            WaitForMe("ffmpeg")
+
+            time.sleep(1)
+
+            if KILLLOAD != "":
+                cmd = "pkill " + KILLLOAD
+                pkill = subprocess.Popen(cmd, shell=True)
+                KILLLOAD = ""
+
+            Pfig("\n-Finished-\n")
+            Pfig(
+                "\n-Done Encoding "
+                + str(vfile).replace(".mkv", ".mp4")
+                + "-\n-Removing old "
+                + str(vfile)
+                + "-\n\n"
+            )
+            try:
+                os.remove(str(vfile))
+            except:
+                Pfig("\n Failed to remove file ..\n")
+    Pfig("\n-All Videos have been processed-\n")
+    Pfig("\n-Flushing compress.video-\n")
+    RwFile("compress.video", None, "w")
+    Pfig("\n-Done-\n")
+
 
 def RanDef():
+    global SEARCH
+    global SearchRom
 
+    if SEARCH is True:
+        romret = ""
+        romfiles = []
+        movfile = []
+        DirChosen = []
+        FOUNDONE = False
 
-     if SEARCH is True:
-          romret = ""
-          romfiles = []
-          movfiles = []
-          DirChosen = []
-          FOUNDONE = False
+        if RECORD is True:
 
-          if RECORD is True:
+            if IGNOREBAD == False:
+                BlackList()
 
-               if IGNOREBAD == False:
-                         BlackList()
+            for dirpath, dirnames, filenames in os.walk(DirMovies):
+                for name in filenames:
+                    if name.endswith(".sfc") or name.endswith(".smc"):
+                        if SearchRom.lower() in name.lower():
+                            if NOJP == True:
+                                if not "-J-" in name and name not in BADROMS:
+                                    romfiles.append(name)
+                                    DirChosen.append(dirpath + "/")
+                                    FOUNDONE = True
+                            elif NOEU == True:
+                                if not "-E-" in name and name not in BADROMS:
+                                    romfiles.append(name)
+                                    DirChosen.append(dirpath + "/")
+                                    FOUNDONE = True
+                            elif NOUS == True:
+                                if not "-U-" in name and name not in BADROMS:
+                                    romfiles.append(name)
+                                    DirChosen.append(dirpath + "/")
+                                    FOUNDONE = True
+                            elif JP == True:
+                                if "-J-" in name and name not in BADROMS:
+                                    romfiles.append(name)
+                                    DirChosen.append(dirpath + "/")
+                                    FOUNDONE = True
+                            elif EU == True:
+                                if "-E-" in name and name not in BADROMS:
+                                    romfiles.append(name)
+                                    DirChosen.append(dirpath + "/")
+                                    FOUNDONE = True
+                            elif US == True:
+                                if "-U-" in name and name not in BADROMS:
+                                    romfiles.append(name)
+                                    DirChosen.append(dirpath + "/")
+                                    FOUNDONE = True
+                            else:
+                                romfiles.append(name)
+                                DirChosen.append(dirpath + "/")
+                                FOUNDONE = True
 
-               for dirpath, dirnames, filenames in os.walk(DirMovies):
-                    for name in filenames:
-                         if name.endswith(".sfc") or name.endswith(".smc"):
-                              if SearchRom.lower() in name.lower():
-                                   if NOJP == True:
-                                        if not "-J-" in name and name not in BADROMS:
-                                             romfiles.append(name)
-                                             DirChosen.append(dirpath+"/")
-                                             FOUNDONE = True
-                                   elif NOEU == True:
-                                        if not "-E-" in name and name not in BADROMS:
-                                             romfiles.append(name)
-                                             DirChosen.append(dirpath+"/")
-                                             FOUNDONE = True
-                                   elif NOUS == True:
-                                        if not "-U-" in name and name not in BADROMS:
-                                             romfiles.append(name)
-                                             DirChosen.append(dirpath+"/")
-                                             FOUNDONE = True
-                                   elif JP == True:
-                                        if "-J-" in name and name not in BADROMS:
-                                             romfiles.append(name)
-                                             DirChosen.append(dirpath+"/")
-                                             FOUNDONE = True
-                                   elif EU == True:
-                                        if "-E-" in name and name not in BADROMS:
-                                             romfiles.append(name)
-                                             DirChosen.append(dirpath+"/")
-                                             FOUNDONE = True
-                                   elif US == True:
-                                        if "-U-" in name and name not in BADROMS:
-                                             romfiles.append(name)
-                                             DirChosen.append(dirpath+"/")
-                                             FOUNDONE = True
-                                   else:
-                                             romfiles.append(name)
-                                             DirChosen.append(dirpath+"/")
-                                             FOUNDONE = True
-
-          if REPLAY == True:
-                 MovLst = [i for i in os.listdir(DirMovies)]
-                 for dir in MovLst:
-                    if SearchRom.lower() in dir.lower():
-                         FOUNDONE = True
-                         currentdir = DirMovies+dir+"/"
-                         try:
-                              for i in os.listdir(currentdir):
-                                   if i.endswith(".mp4") or i.endswith(".mkv") or i.endswith(".avi"):
-                                             print(currentdir+i)
-                                             movfiles.append(currentdir+i)
-                         except Exception as e:
-                              Pfig("\n\nError:"+str(e))
-                              print()
-                              pass
-
-                 if len(movfiles) > 0:
+        if REPLAY == True:
+            MovLst = [i for i in os.listdir(DirMovies)]
+            for dir in MovLst:
+                if SearchRom.lower() in dir.lower():
+                    FOUNDONE = True
+                    currentdir = DirMovies + dir + "/"
                     try:
-                         random.shuffle(movfiles)
-
-                         return movfiles,DirChosen
-
+                        for i in os.listdir(currentdir):
+                            if (
+                                i.endswith(".mp4")
+                                or i.endswith(".mkv")
+                                or i.endswith(".avi")
+                            ):
+                                print(currentdir + i)
+                                movfile.append(currentdir + i)
                     except Exception as e:
-                         Pfig("Error:"+str(e))
-                         pass
-                 else:
-                        Pfig("\n\nHaven't Found any Movie Containing %s .\n\n"%SearchRom)
-                        GetOut()
+                        Pfig("\n\nError:" + str(e))
+                        print()
+                        pass
 
+            if len(movfile) > 0:
+                try:
+                    random.shuffle(movfile)
 
+                    return movfile, DirChosen
 
+                except Exception as e:
+                    Pfig("Error:" + str(e))
+                    pass
+            else:
+                Pfig("\n\nHaven't Found any Movie Containing %s .\n\n" % SearchRom)
+                GetOut()
 
+        if RECORD == True and FOUNDONE == True:
+            try:
+                for n, rom in enumerate(romfiles):
+                    print("-To choose: %s type number: %s" % (rom, n))
+                print("-To search for another game type: search")
+                print("-To play a random game type: random")
 
-          if RECORD == True and FOUNDONE == True:
-                    try:
-                         rnd = random.randint(0,len(romfiles)-1)
-                         romret = romfiles[rnd]
+                while True:
+                    answer = input("Please type your choice:")
+                    if answer.isdigit() is True:
+                        if int(answer) in range(0, len(romfiles) - 1):
+                            return (romfiles[int(answer)], DirChosen[int(answer)])
+                    if answer == "search":
+                        SearchRom = input(
+                            "Please enter the rom you would like to search:"
+                        )
+                        return RanDef()
+                    if answer == "random":
+                        SEARCH = False
+                        return RanDef()
 
-                         return romret,DirChosen[rnd]
+            #                         rnd = random.randint(0,len(romfiles)-1)
+            #                         romret = romfiles[rnd]
+            #                         return romret,DirChosen[rnd]
 
-                    except Exception as e:
-                         Pfig("\n\nError:"+str(e))
-                         pass
-          else:
-                        Pfig("\n\nHaven't Found any Game Containing the word : %s \n\n"%SearchRom)
-                        GetOut()
+            except Exception as e:
+                Pfig("\n\nError:" + str(e))
+                pass
+        else:
+            Pfig("\n\nHaven't Found any Game Containing the word : %s \n\n" % SearchRom)
+            while True:
+                answer = input(
+                    "Type search to search for another game or random to play a random one:"
+                )
+                if answer == "search":
+                    SearchRom = input(
+                        "Please enter the name of rom you would like to search:"
+                    )
+                    return RanDef()
+                if answer == "random":
+                    SEARCH = False
+                    return RanDef()
+            GetOut()
 
-     if SEARCH is False:
+    if SEARCH is False:
 
-          while True:
+        while True:
 
-               romret = ""
-               romfiles = []
-               movfiles = []
-               FOUNDONE = False
+            romret = ""
+            romfiles = []
+            movfile = []
+            FOUNDONE = False
 
+            MovLst = [i for i in os.listdir(DirMovies)]
 
-               MovLst = [i for i in os.listdir(DirMovies)]
+            try:
+                rnd = random.randint(0, len(MovLst) - 1)
+                DirChosen = DirMovies + MovLst[rnd]
+            except:
+                Pfig(
+                    "Can't find anything !!!\nWhere am i ?\nPlease check what's in the Movies Folder .."
+                )
+                sys.exit(0)
 
-               try:
-                    rnd = random.randint(0,len(MovLst)-1)
-                    DirChosen = DirMovies+MovLst[rnd]
-               except:
-                    Pfig("Can't find anything !!!\nWhere am i ?\nPlease check what's in the Movies Folder ..")
-                    sys.exit(0)
+            files = os.listdir(DirChosen)
 
+            for i in files:
 
-               files = os.listdir(DirChosen)
-
-               for i in files:
-
-                 if RECORD == True:
+                if RECORD == True:
 
                     if IGNOREBAD == False:
-                         BlackList()
+                        BlackList()
 
                     if i.endswith(".sfc") or i.endswith(".smc"):
-                         if NOJP == True:
-                              if not "-J-" in i and i not in BADROMS:
-                                   romfiles.append(i)
-                                   FOUNDONE = True
-                         elif NOEU == True:
-                              if not "-E-" in i and i not in BADROMS:
-                                   romfiles.append(i)
-                                   FOUNDONE = True
-                         elif NOUS == True:
-                              if not "-U-" in i and i not in BADROMS:
-                                   romfiles.append(i)
-                                   FOUNDONE = True
-                         elif JP == True:
-                              if "-J-" in i and i not in BADROMS:
-                                   romfiles.append(i)
-                                   FOUNDONE = True
-                         elif EU == True:
-                              if "-E-" in i and i not in BADROMS:
-                                   romfiles.append(i)
-                                   FOUNDONE = True
-                         elif US == True:
-                              if "-U-" in i and i not in BADROMS:
-                                   romfiles.append(i)
-                                   FOUNDONE = True
-                         else:
-                             if i not in BADROMS:
-                                   romfiles.append(i)
-                                   FOUNDONE = True
+                        if NOJP == True:
+                            if not "-J-" in i and i not in BADROMS:
+                                romfiles.append(i)
+                                FOUNDONE = True
+                        elif NOEU == True:
+                            if not "-E-" in i and i not in BADROMS:
+                                romfiles.append(i)
+                                FOUNDONE = True
+                        elif NOUS == True:
+                            if not "-U-" in i and i not in BADROMS:
+                                romfiles.append(i)
+                                FOUNDONE = True
+                        elif JP == True:
+                            if "-J-" in i and i not in BADROMS:
+                                romfiles.append(i)
+                                FOUNDONE = True
+                        elif EU == True:
+                            if "-E-" in i and i not in BADROMS:
+                                romfiles.append(i)
+                                FOUNDONE = True
+                        elif US == True:
+                            if "-U-" in i and i not in BADROMS:
+                                romfiles.append(i)
+                                FOUNDONE = True
+                        else:
+                            if i not in BADROMS:
+                                romfiles.append(i)
+                                FOUNDONE = True
 
-               if REPLAY == True:
-                    for dir in MovLst:
-                         currentdir = DirMovies+dir+"/"
-                         try:
-                              for i in os.listdir(currentdir):
-                                   if i.endswith(".mp4") or i.endswith(".mkv") or i.endswith(".avi"):
-                                        print(currentdir+i)
-                                        movfiles.append(currentdir+i)
-                         except Exception as e:
-                              Pfig("\n\nError:"+str(e))
-                              print()
-                              pass
-
-
-
-               if RECORD == True and FOUNDONE == True:
+            if REPLAY == True:
+                for dir in MovLst:
+                    currentdir = DirMovies + dir + "/"
                     try:
-                         rnd = random.randint(0,len(romfiles)-1)
-                         romret = romfiles[rnd]
+                        for i in os.listdir(currentdir):
+                            if (
+                                i.endswith(".mp4")
+                                or i.endswith(".mkv")
+                                or i.endswith(".avi")
+                            ):
+                                print(currentdir + i)
+                                movfile.append(currentdir + i)
+                    except Exception as e:
+                        Pfig("\n\nError:" + str(e))
+                        print()
+                        pass
 
-                         return romret,DirChosen
+            if RECORD == True and FOUNDONE == True:
+                try:
+                    rnd = random.randint(0, len(romfiles) - 1)
+                    romret = romfiles[rnd]
+
+                    return romret, DirChosen
+
+                except Exception as e:
+                    Pfig("\n\nError:" + str(e))
+                    pass
+
+            if REPLAY == True:
+                if len(movfile) > 0:
+                    try:
+                        random.shuffle(movfile)
+
+                        return movfile, DirChosen
 
                     except Exception as e:
-                         Pfig("\n\nError:"+str(e))
-                         pass
+                        Pfig("Error:" + str(e))
+                        pass
+                else:
+                    Pfig(
+                        "\n\nHaven't Found any Movie\n\nUse sneaver -record to fill the playlist.\n\n"
+                    )
+                    GetOut()
 
 
-               if REPLAY == True :
-                 if len(movfiles) > 0:
-                    try:
-                         random.shuffle(movfiles)
+def LenCheck(DirChosen, newmovie):
 
-                         return movfiles,DirChosen
+    if NOLENCHECK is False:
+        cmd = (
+            "ffprobe -v quiet -print_format compact=print_section=0:nokey=1:escape=csv -show_entries format=duration "
+            + str(DirChosen)
+            + "/"
+            + str(newmovie)
+        )
+        ffprobe = subprocess.Popen(
+            cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+        output, error = ffprobe.communicate()
 
-                    except Exception as e:
-                         Pfig("Error:"+str(e))
-                         pass
-                 else:
-                        Pfig("\n\nHaven't Found any Movie\n\nUse sneaver -record to fill the playlist.\n\n")
-                        GetOut()
+        try:
+            videolen = int(float(output.decode().strip()))
+        except Exception as e:
+            print("Error:%s\nFfprobe output:%s" % (str(e), output.decode()))
+            videolen = 42
 
+        if videolen >= 42:
+            Pfig("\n-Saving video path to compress it later-\n")
+            RwFile("compress.video", str(DirChosen) + "/" + str(newmovie), "a+")
+            print(
+                "Added %s to Data/compress.video" % str(DirChosen) + "/" + str(newmovie)
+            )
+            Pfig("\n-Done-\n")
+        else:
+            Pfig("\n-Recorded Video duration is less than 42 seconds-\n")
+            Pfig("\n-Removing (use --nolencheck to prevent this) ...-\n")
+            try:
+                os.remove(str(DirChosen) + "/" + str(newmovie))
+            except Exception as e:
+                print("Error:", str(e))
+                Pfig("\n-Failed to remove file ...-\n")
+    else:
+        Pfig("\n-Saving video path to compress it later-\n")
+        RwFile("compress.video", str(DirChosen) + "/" + str(newmovie), "a+")
+        print("Added %s to Data/compress.video" % str(DirChosen) + "/" + str(newmovie))
+        Pfig("\n-Done-\n")
+    time.sleep(1)
 
 
 ##PressStart#
 signal.signal(signal.SIGINT, signal_handler)
 
 if 1 == 1:
-     print()
+    print()
 
-     ##Renaming
-     MovLst = [i for i in os.listdir(DirMovies)]
-     for name in MovLst:
-                    Rename(name,DirMovies)
-     MovLst = [i for i in os.listdir(DirMovies)]
-     for currentdir in MovLst:
-               files = os.listdir(DirMovies+currentdir)
-               for name in files:
-                    Rename(name,DirMovies+currentdir+"/")
+    ##Renaming
+    MovLst = [i for i in os.listdir(DirMovies)]
+    for name in MovLst:
+        Rename(name, DirMovies)
+    MovLst = [i for i in os.listdir(DirMovies)]
+    for currentdir in MovLst:
+        files = os.listdir(DirMovies + currentdir)
+        for name in files:
+            Rename(name, DirMovies + currentdir + "/")
 
-     if CONFIG == True:
-          Configuration()
-     elif os.path.exists(DirData+"sneaver.conf") == False:
-          Configuration()
+    if CONFIG == True:
+        Configuration()
+    elif os.path.exists(DirData + "sneaver.conf") == False:
+        Configuration()
 
-     if REPLAY == True:
+    if REPLAY == True:
 
-       Container,DirChosen = RanDef()
-       print("Found "+str(len(Container))+" Movies !\n\n")
+        Container, DirChosen = RanDef()
+        print("Found " + str(len(Container)) + " Movies !\n\n")
 
-       playlist = ""
+        #       cmd = "cvlc --fullscreen --play-and-exit "+ str(playlist)
 
-       for movfile in Container:
+        Pfig("\nLaunching : \n")
+        for item in Container:
+            cmd = "ffplay -fs -loglevel panic -autoexit " + str(item)
+            cvlc = subprocess.Popen(
+                cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            )
+            output, error = cvlc.communicate()
 
-          playlist += str(movfile) + " "
+        #              if "filesystem access error:" in output:
+        #                    Pfig("!!!!!!!!!!!\nError while Trying to Open File!!\n!!!!!!!!!!!\n")
+        #                    cvlc.terminate()
 
+        GetOut()
 
-       cmd = "cvlc --fullscreen --play-and-exit "+ str(playlist)
+    ##
 
-       Pfig("\nLaunching : \n")
-       print(cmd)
+    if RECORD == True:
 
-       cvlc = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-       output,error = cvlc.communicate()
-       cout= output.decode()
+        ParseConf()
+        devsound = Speaker()
+        time.sleep(1)
+        LoadCoin("firstload")
+        while True:
+            WaitForMe("snes9x")
+            WaitForMe("ffmpeg")
+            Container, DirChosen = RanDef()
 
-       if "filesystem access error:" in cout:
-                    Pfig("!!!!!!!!!!!\nError while Trying to Open File!!\n!!!!!!!!!!!\n")
-                    cvlc.terminate()
+            WALLET = int(WALLET)
 
-       GetOut()
+            InsertCoin(WALLET)
 
-##
+            LoadCoin("printcoins")
 
+            WaitForMe("ffmpeg")
 
-     if RECORD == True:
+            Pfig("\nSneaver chose to open :" + str(DirChosen))
 
+            time.sleep(1)
 
-          ParseConf()
-          time.sleep(1)
-          LoadCoin("firstload")
-          while True:
-              WaitForMe('snes9x')
-              WaitForMe('ffmpeg')
-              Container,DirChosen = RanDef()
+            while True:
+                Reslt = PressStart(str(DirChosen))
+                if Reslt is False:
+                    Pfig("\n-Choosing another random game..-\n")
+                    Container, DirChosen = RanDef()
+                    time.sleep(1)
+                else:
+                    break
 
-              WALLET = int(WALLET)
+            ScreenResize("change")
 
-              InsertCoin(WALLET)
+            newmovie = str(datetime.datetime.now().strftime("%y-%m-%d-%H-%M")) + ".mkv"
 
-              LoadCoin("printcoins")
+            Pfig("\n-Recording now-\n" + (newmovie))
 
-              WaitForMe("ffmpeg")
+            if RESPAWN is True:
+                RESPAWN = False
+                if (
+                    os.path.exists(DirSaves + str(Container).replace(".smc", ".000"))
+                    is True
+                ):
+                    cmd = (
+                        "/usr/bin/padsp snes9x -nostdconf -conf "
+                        + str(DirData)
+                        + "sneaver.conf -maxaspect -fullscreen -xvideo "
+                        + str(DirChosen)
+                        + "/"
+                        + str(Container)
+                        + " -loadsnapshot "
+                        + str(DirSaves + str(Container).replace(".smc", ".000"))
+                    )
+                    Pfig("-Respawn using QuickSave.000-")
+                    print(str(cmd) + "\n")
 
-              Pfig("\nSneaver chose to open :"+str(DirChosen))
+                elif (
+                    os.path.exists(DirSaves + str(Container).replace(".smc", ".oops"))
+                    is True
+                ):
 
-              time.sleep(1)
+                    cmd = (
+                        "/usr/bin/padsp snes9x -nostdconf -conf "
+                        + str(DirData)
+                        + "sneaver.conf -maxaspect -fullscreen -xvideo "
+                        + str(DirChosen)
+                        + "/"
+                        + str(Container)
+                        + " -loadsnapshot "
+                        + str(DirSaves + str(Container).replace(".smc", ".oops"))
+                    )
+                    Pfig("\n-Respawn using AutoSave.oops-\n")
+                    print(str(cmd) + "\n")
 
-              PressStart()
+                else:
+                    Pfig("\n-Error: [RESPAWN] No Auto-Save Found.-\n")
+                    cmd = (
+                        "/usr/bin/padsp snes9x -nostdconf -conf "
+                        + str(DirData)
+                        + "sneaver.conf -maxaspect -fullscreen -xvideo "
+                        + str(DirChosen)
+                        + "/"
+                        + str(Container)
+                    )
+            else:
+                cmd = (
+                    "/usr/bin/padsp snes9x -nostdconf -conf "
+                    + str(DirData)
+                    + "sneaver.conf -maxaspect -fullscreen -xvideo "
+                    + str(DirChosen)
+                    + "/"
+                    + str(Container)
+                )
 
-              ScreenResize("change")
+            Pfig("\n-Launching Snes9x-\n")
+            print(cmd)
+            sneaver = subprocess.Popen(cmd, shell=True)
 
-              newmovie =str(datetime.datetime.now().strftime("%y-%m-%d-%H-%M"))+".mkv"
+            cmd = (
+                "padsp ffmpeg -loglevel error -f pulse -ar 32000 -i "
+                + str(devsound)
+                + " -f x11grab -r 24 -s "
+                + str(NEWRES)
+                + " -i :0.0 -acodec pcm_s16le -vcodec libx264 -preset ultrafast -crf 0 -threads 0 "
+                + str(DirChosen)
+                + "/"
+                + str(newmovie)
+            )
 
-              Pfig("\n-Recording now-\n"+(newmovie))
+            Pfig("\n-Recording Screen-\n")
+            print(cmd)
+            ffmpeg = subprocess.Popen(cmd, shell=True)
+            failsafe = False
+            while True:
+                WaitForMe("snes9x")
+                print("inside while")
 
-              cmd = "/usr/bin/padsp snes9x -nostdconf -conf "+ str(DirData)+"sneaver.conf -maxaspect -fullscreen -xvideo "+ str(DirChosen)+ "/" + str(Container)
+                if ERROR is True:
+                    GifLauncher("Error")
+                    WALLET = WALLET + 1
+                    pkill = subprocess.Popen("pkill ffmpeg", shell=True)
+                    WaitForMe("ffmpeg")
+                    Pfig("\n-Changing back Screen Resolution-\n" + str(OLDSCREEN))
+                    LenCheck(DirChosen, newmovie)
+                    time.sleep(1)
+                    ScreenResize("revert")
+                    while True:
+                        answer = input(
+                            "Snes9x has crashed would you like to restart the game using the last autosave ? (y/n):"
+                        )
+                        if answer == "y":
 
-              Pfig("\n-Launching Snes9x-\n")
-              print(cmd)
-              sneaver = subprocess.Popen(cmd,shell=True)
+                            newmovie = (
+                                str(datetime.datetime.now().strftime("%y-%m-%d-%H-%M"))
+                                + ".mkv"
+                            )
 
-              cmd = "padsp ffmpeg -loglevel error -f alsa -ac 1 -ar 32000 -i pulse -f x11grab -r 24 -s "+str(NEWRES)+" -i :0.0 -acodec pcm_s16le -vcodec libx264 -preset ultrafast -crf 0 -threads 0 "+str(DirChosen)+"/"+str(newmovie)
+                            if (
+                                os.path.exists(
+                                    DirSaves + str(Container).replace(".smc", ".000")
+                                )
+                                is True
+                            ):
 
-              Pfig("\n-Recording Screen-\n")
-              print(cmd)
-              ffmpeg = subprocess.Popen(cmd,shell=True)
+                                cmd = (
+                                    "padsp ffmpeg -loglevel error -f pulse -ar 32000 -i "
+                                    + str(devsound)
+                                    + " -f x11grab -r 24 -s "
+                                    + str(NEWRES)
+                                    + " -i :0.0 -acodec pcm_s16le -vcodec libx264 -preset ultrafast -crf 0 -threads 0 "
+                                    + str(DirChosen)
+                                    + "/"
+                                    + str(newmovie)
+                                )
 
-              while True:
-                   WaitForMe('snes9x')
+                                Pfig("\n-Recording Screen-\n")
+                                print(cmd)
+                                ffmpeg = subprocess.Popen(cmd, shell=True)
 
-                   if ERROR == True:
-                         GifLauncher("Error")
-                         ERROR = False
-                         WALLET = WALLET + 1
-                         RwFile("bad.roms",str(Container),"a")
-                         Pfig("Rom: "+str(Container)+" Blacklisted..")
-                         
-                         if RESPAWN is True:
-                              if os.path.exists(DirSaves+str(Container).replace(".smc",".000"))is True: 
-                                   cmd = "/usr/bin/padsp snes9x -nostdconf -conf "+ str(DirData)+"sneaver.conf -maxaspect -fullscreen -xvideo "+ str(DirChosen)+ "/" + str(Container) + " -loadsnapshot " + str(DirSaves+str(Container).replace(".smc",".000"))
-                                   Pfig("-Respawn using QuickSave.000-")
-                                   print(str(cmd)+"\n")
-                                   sneaver = subprocess.Popen(cmd,shell=True)
-                              elif os.path.exists(DirSaves+str(Container).replace(".smc",".oops"))is True:
-                                   cmd = "/usr/bin/padsp snes9x -nostdconf -conf "+ str(DirData)+"sneaver.conf -maxaspect -fullscreen -xvideo "+ str(DirChosen)+ "/" + str(Container) + " -loadsnapshot " + str(DirSaves+str(Container).replace(".smc",".oops"))
-                                   Pfig("\n-Respawn using AutoSave.oops-\n")
-                                   print(str(cmd)+"\n")
-                                   sneaver = subprocess.Popen(cmd,shell=True)
-                              else:
-                                   Pfig("\n-Error: [RESPAWN] No Auto-Save Found.-\n")
-                                   break
-                         else:
-                              break
-                   break 
+                                ScreenResize("change")
 
-              pkill = subprocess.Popen("pkill ffmpeg",shell=True)
-              WaitForMe('ffmpeg')
-              time.sleep(1)
+                                cmd = (
+                                    "/usr/bin/padsp snes9x -nostdconf -conf "
+                                    + str(DirData)
+                                    + "sneaver.conf -maxaspect -fullscreen -xvideo "
+                                    + str(DirChosen)
+                                    + "/"
+                                    + str(Container)
+                                    + " -loadsnapshot "
+                                    + str(
+                                        DirSaves
+                                        + str(Container).replace(".smc", ".000")
+                                    )
+                                )
+                                Pfig("-Respawn using QuickSave.000-")
+                                print(str(cmd) + "\n")
+                                sneaver = subprocess.Popen(cmd, shell=True)
+                            elif (
+                                os.path.exists(
+                                    DirSaves + str(Container).replace(".smc", ".oops")
+                                )
+                                is True
+                            ):
 
-              Pfig("\n-Your game session has been recorded with success !-\n")
-              Pfig("\n-Changing back Screen Resolution-\n"+str(OLDSCREEN))
+                                cmd = (
+                                    "padsp ffmpeg -loglevel error -f pulse -ar 32000 -i "
+                                    + str(devsound)
+                                    + " -f x11grab -r 24 -s "
+                                    + str(NEWRES)
+                                    + " -i :0.0 -acodec pcm_s16le -vcodec libx264 -preset ultrafast -crf 0 -threads 0 "
+                                    + str(DirChosen)
+                                    + "/"
+                                    + str(newmovie)
+                                )
+                                Pfig("\n-Recording Screen-\n")
+                                print(cmd)
+                                ffmpeg = subprocess.Popen(cmd, shell=True)
 
-              ScreenResize("revert")
+                                cmd = (
+                                    "/usr/bin/padsp snes9x -nostdconf -conf "
+                                    + str(DirData)
+                                    + "sneaver.conf -maxaspect -fullscreen -xvideo "
+                                    + str(DirChosen)
+                                    + "/"
+                                    + str(Container)
+                                    + " -loadsnapshot "
+                                    + str(
+                                        DirSaves
+                                        + str(Container).replace(".smc", ".oops")
+                                    )
+                                )
+                                Pfig("\n-Respawn using AutoSave.oops-\n")
+                                print(str(cmd) + "\n")
+                                sneaver = subprocess.Popen(cmd, shell=True)
+                            else:
+                                failsafe = True
+                                Pfig("\n-Error: [RESPAWN] No Auto-Save Found.-\n")
+                            break
 
-              Pfig("\n-Now let's encode the video to save some disk space..-\n")
+                        if answer == "n":
+                            while True:
+                                badanswer = input(
+                                    "Would you like to blacklist this rom ? (y/n):"
+                                )
+                                if badanswer == "y":
+                                    RwFile("bad.roms", str(Container), "a")
+                                    Pfig("Rom: " + str(Container) + " Blacklisted..")
+                                    break
+                                if badanswer == "n":
+                                    break
+                            break
+                if ERROR is True:
+                    ERROR = False
+                else:
+                    break
+            print("outside while")
+            pkill = subprocess.Popen("pkill ffmpeg", shell=True)
+            WaitForMe("ffmpeg")
+            time.sleep(1)
 
-
-              GifLauncher("Loading")
-
-              cmd ="ffmpeg -i "+str(DirChosen)+"/"+str(newmovie)+" -acodec libvorbis -ab 128k -ac 2 -vcodec libx264 -preset superfast -crf 32 -maxrate 400k -bufsize 400k -threads 1 -stats "+str(DirChosen)+"/"+str(newmovie).replace(".mkv",".mp4")
-              print(cmd)
-#              ffmpeg = subprocess.Popen(cmd,shell=True)
-              ffmpeg = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-              output,error = ffmpeg.communicate()
-              fout = output.decode()
-
-              if "No such file or directory" in fout:
-                    Pfig("!!!!!!!!!!!\nError while Trying to Open File!!\n!!!!!!!!!!!\n")
-                    ffmpeg.terminate()
-                    cmd = "pkill ffmpeg"
-                    pkill = subprocess.Popen(cmd,shell=True)
-
-              WaitForMe("ffmpeg")
-
-              time.sleep(1)
-
-              if KILLLOAD != "":
-                   cmd = "pkill " + KILLLOAD
-                   pkill = subprocess.Popen(cmd,shell=True)
-                   KILLLOAD = ""
-
-              Pfig("\n-Finished-\n")
-              Pfig("\n-Done Encoding "+str(newmovie).replace(".mkv",".mp4")+"-\n-Removing old "+str(newmovie)+"-\n\n")
-              try:
-                   os.remove(str(DirChosen)+"/"+str(newmovie))
-              except:
-                    Pfig("\n Failed to remove file ..\n")
+            Pfig("\n-Changing back Screen Resolution-\n" + str(OLDSCREEN))
+            ScreenResize("revert")
+            if failsafe is False:
+                Pfig("\n-Your game session has been recorded with success !-\n")
+                LenCheck(DirChosen, newmovie)
+            time.sleep(1)
 
 
 ##TouchDown##

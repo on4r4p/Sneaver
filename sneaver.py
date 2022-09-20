@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-from shutil import which
+from shutil import which,rmtree
 from pyfiglet import Figlet
 from inputs import devices
 from PIL import Image
@@ -11,6 +11,11 @@ DirMovies = ScriptDir + "/Movies/"
 DirData = ScriptDir + "/Data/"
 DirGif = DirData + "Gifs/"
 DirSaves = DirData + "savestate/"
+Category = ["action","adventure","fighting","platform","puzzle","racing","rpg","shooter","simulation","sport","strategy"]
+CrashDate = ""
+LastCrashDate = ""
+CrashRom = ""
+CrashCounter = 0
 WALLET = 0
 KILLLOAD = ""
 OLDSCREEN = ""
@@ -25,6 +30,7 @@ SearchRom = ""
 BADROMS = []
 LASTBAD = ""
 IGNOREBAD = False
+GENRE = False
 SEARCH = False
 ERROR = False
 GODMODE = False
@@ -37,6 +43,7 @@ US = False
 NOLENCHECK = False
 COMPRESS = False
 RESPAWN = False
+SMARTCRASH = False
 RECORD = False
 REPLAY = False
 CONFIG = False
@@ -49,10 +56,6 @@ print(
  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄            
 ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌           
  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀            
-
-
-
-
               ▄▄▄▄▄▄▄▄▄▄▄  ▄▄        ▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄               ▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄
              ▐░░░░░░░░░░░▌▐░░▌      ▐░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░▌             ▐░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
              ▐░█▀▀▀▀▀▀▀▀▀ ▐░▌░▌     ▐░▌▐░█▀▀▀▀▀▀▀▀▀ ▐░█▀▀▀▀▀▀▀█░▌ ▐░▌           ▐░▌ ▐░█▀▀▀▀▀▀▀▀▀ ▐░█▀▀▀▀▀▀▀█░▌
@@ -64,10 +67,6 @@ print(
               ▄▄▄▄▄▄▄▄▄█░▌▐░▌     ▐░▐░▌▐░█▄▄▄▄▄▄▄▄▄ ▐░▌       ▐░▌       ▐░▐░▌       ▐░█▄▄▄▄▄▄▄▄▄ ▐░▌      ▐░▌
              ▐░░░░░░░░░░░▌▐░▌      ▐░░▌▐░░░░░░░░░░░▌▐░▌       ▐░▌        ▐░▌        ▐░░░░░░░░░░░▌▐░▌       ▐░▌
               ▀▀▀▀▀▀▀▀▀▀▀  ▀        ▀▀  ▀▀▀▀▀▀▀▀▀▀▀  ▀         ▀          ▀          ▀▀▀▀▀▀▀▀▀▀▀  ▀         ▀
-
-
-
-
 
  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄            
 ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌           
@@ -87,6 +86,12 @@ def signal_handler(sig, frame):
 def RwFile(filename, data, mode):
 
     try:
+
+        if "roms." in filename and mode == "r":
+                with open(DirData + filename, mode) as file:
+                    lines = file.readlines()
+                    lines = [l.strip() for l in lines]
+                    return lines
 
         if filename == "bad.roms":
             if mode == "r":
@@ -163,14 +168,14 @@ def Pfig(txt):
 def AutoSaveState():
     global CHECKPOINT
 
-    if CHECKPOINT >= 15:
+    if CHECKPOINT >= 10:
         CHECKPOINT = 0
         print("\n!!AutoSaving!!\n")
         keyboard = Controller()
 
         keyboard.press(Key.insert)
-        time.sleep(0.5)
-        keyboard.release(Key.insert)
+        time.sleep(1)
+        keyboard.release(Key.insert) #just in case
 
 
 #     else:
@@ -281,8 +286,8 @@ def GifLauncher(mode):
                             timer = "4"
                         if int(timer) >= 10:
                             timer = "10"
-                        print("Gif name =", Gif)
-                        print("Gif duration = %s timer set to %s:" % (duration, timer))
+                        #print("Gif name =", Gif)
+                        #print("Gif duration = %s timer set to %s:" % (duration, timer))
                         break
             else:
                 timer = "0"
@@ -428,6 +433,69 @@ def GifLauncher(mode):
             return LoadCoin("firstload")
 
 
+def CompressVids():
+
+    global KILLLOAD
+
+    Pfig("\n-Compressing videos files found in compress.video-\n")
+    VidLst = RwFile("compress.video", None, "r")
+    if len(VidLst) > 0:
+        Pfig("\n-%s videos files in compress.video-\n" % len(VidLst))
+        time.sleep(1)
+    else:
+        Pfig("\n-No video found to be compressed-\n")
+        time.sleep(1)
+        return ()
+    for vfile in VidLst:
+        if len(vfile) > 2:
+            GifLauncher("Loading")
+
+            cmd = (
+                "ffmpeg -y -i "
+                + vfile
+                + " -acodec libvorbis -ab 128k -ac 2 -vcodec libx264 -preset superfast -crf 32 -maxrate 400k -bufsize 400k -threads 1 -stats "
+                + vfile.replace(".mkv", ".mp4")
+            )
+            print(cmd)
+            #              ffmpeg = subprocess.Popen(cmd,shell=True)
+            ffmpeg = subprocess.Popen(
+                cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            )
+            output, error = ffmpeg.communicate()
+            fout = output.decode()
+
+            if "No such file or directory" in fout:
+                Pfig("!!!!!!!!!!!\nError while Trying to Open File!!\n!!!!!!!!!!!\n")
+                ffmpeg.terminate()
+                cmd = "pkill ffmpeg"
+                pkill = subprocess.Popen(cmd, shell=True)
+
+            WaitForMe("ffmpeg")
+
+            time.sleep(1)
+
+            if KILLLOAD != "":
+                cmd = "pkill " + KILLLOAD
+                pkill = subprocess.Popen(cmd, shell=True)
+                KILLLOAD = ""
+
+            Pfig("\n-Finished-\n")
+            Pfig(
+                "\n-Done Encoding "
+                + str(vfile).replace(".mkv", ".mp4")
+                + "-\n-Removing old "
+                + str(vfile)
+                + "-\n\n"
+            )
+            try:
+                os.remove(str(vfile))
+            except:
+                Pfig("\n Failed to remove file ..\n")
+    Pfig("\n-All Videos have been processed-\n")
+    Pfig("\n-Flushing compress.video-\n")
+    RwFile("compress.video", None, "w")
+    Pfig("\n-Done-\n")
+
 def GetOut():
     if COMPRESS is True:
         CompressVids()
@@ -483,9 +551,23 @@ if len(sys.argv) > 1:
             print("Search Argument is empty.")
             sys.exit(0)
 
+    if "--genre" in sys.argv:
+        GENRE = True
+        pos = sys.argv.index("--genre")
+        try:
+            SearchCat = str(sys.argv[pos + 1])
+        except:
+            print("Genre Argument is empty.")
+            print("Genre Argument must be one of those keywords:\n%s"%Category)
+            sys.exit(0)
+        if SearchCat not in Category:
+           print("Genre Argument must be one of those keywords:\n%s"%Category)
+           sys.exit(0)
+
     if "--respawn" in sys.argv:
         RESPAWN = True
-
+    if "--smartcrash" in sys.argv:
+        SMARTCRASH = True
     if "--allowbad" in sys.argv:
         IGNOREBAD = True
 
@@ -526,13 +608,13 @@ if len(sys.argv) > 1:
 
     if sys.argv[1] == "-h" or sys.argv[1] == "--help":
         print(
-            "\n**Sneaver is a script using snes9x and ffmpeg to play or watch a snes game at random.\n\n**Download a rom put it in its folder inside the Movies directory\n\n**Then launch sneaver ^^\n\n\n**Use :\n\n./sneaver.py --config (To configure your gamepads)  \n\n./sneaver.py --record (For recording a random game.)\n./sneaver.py --replay (For watching all the movies recorded with ffplay.)\n./sneaver.py --record --nojp/--jp (Avoid or Only recording Japenese games.)\n./sneaver.py --record --noeu/--eu (Avoid or Only recording European games.)\n./sneaver.py --record --nous/--us (Avoid or Only recording American games.)\n./sneaver.py --record/--replay --search [Name] To search for a rom.\n./sneaver.py --record --nolencheck Do not erase recorded videos that are less than 42s\n./sneaver.py --record --respawn Start the rom using its last auto save state.\n./sneaver.py --record --allowbad Ignore Blacklisted Roms.\n\n./sneaver.py --flushbad To erase bad roms list .\n./sneaver.py --compress To compress recorded videos before quitting.\n\n\nWhile in record mode Sneaver is using a credit system.\nWhen credits reaches Zero you can't play anymore.\nseaver --badkid to remove some coins.\n./sneaver.py --record --godmode (To get rich)\n\n\nKeep pressing the Exit button multiple times if Snes9x ever crash.\n**Have fun !!\n"
+            "\n**Sneaver is a script using snes9x and ffmpeg to play or watch a snes game at random.\n\n**Download a rom put it in its folder inside the Movies directory\n\n**Then launch sneaver ^^\n\n\n**Use :\n\n./sneaver.py --config (To configure your gamepads)  \n\n./sneaver.py --record (For recording a random game.)\n./sneaver.py --replay (For watching all the movies recorded with ffplay.)\n./sneaver.py --record --nojp/--jp (Avoid or Only recording Japenese games.)\n./sneaver.py --record --noeu/--eu (Avoid or Only recording European games.)\n./sneaver.py --record --nous/--us (Avoid or Only recording American games.)\n./sneaver.py --record/--replay --search [Name] To search for and select a specific rom.\n./sneaver.py --record/--replay --genre [GENRE] To select a game by its genre.\n./sneaver.py --record --nolencheck Do not erase recorded videos that are less than 60s\n./sneaver.py --record --respawn Start the rom using its last auto save state.\n./sneaver.py --record --smartcrash Same as --respawn but without asking you after a crash.\n./sneaver.py --record --allowbad Ignore Blacklisted Roms.\n./sneaver.py --flushbad To erase bad roms list .\n./sneaver.py --compress To compress recorded videos before quitting.\n\n\nWhile in record mode Sneaver is using a credit system.\nWhen credits reaches Zero you can't play anymore.\nseaver --badkid to remove some coins.\n./sneaver.py --record --godmode (To get rich)\n\n\nKeep pressing the Exit button multiple times if Snes9x ever crash.\n**Have fun !!\n"
         )
         print()
         sys.exit(1)
 else:
     print(
-        "\n**Sneaver is a script using snes9x and ffmpeg to play or watch a snes game at random.\n\n**Download a rom put it in its folder inside the Movies directory\n\n**Then launch sneaver ^^\n\n\n**Use :\n\n./sneaver.py --config (To configure your gamepads)  \n./sneaver.py --record (For recording a random game.)\n./sneaver.py --replay (For watching all the movies recorded with ffplay.)\n./sneaver.py --record --nojp/--jp (Avoid or Only recording Japenese games.)\n./sneaver.py --record --noeu/--eu (Avoid or Only recording European games.)\n./sneaver.py --record --nous/--us (Avoid or Only recording American games.)\n./sneaver.py --record/--replay --search [Name] To search for a rom.\n./sneaver.py --record --nolencheck Do not erase recorded videos that are less than 42s\n../sneaver.py --record --respawn Start the rom using its last auto save state.\n./sneaver.py --record --allowbad Ignore Blacklisted Roms.\n./sneaver.py --flushbad To erase bad roms list .\n./sneaver.py --compress To compress recorded videos before quitting.\n\n\nWhile in record mode Sneaver is using a credit system.\n./sneaver.py -badkid to remove some coins.\n./sneaver.py --record --godmode (To get rich)\n\nKeep pressing the Exit button multiple time if Snes9x ever crash.\n**Have fun !!\n"
+        "\n**Sneaver is a script using snes9x and ffmpeg to play or watch a snes game at random.\n\n**Download a rom put it in its folder inside the Movies directory\n\n**Then launch sneaver ^^\n\n\n**Use :\n\n./sneaver.py --config (To configure your gamepads)  \n./sneaver.py --record (For recording a random game.)\n./sneaver.py --replay (For watching all the movies recorded with ffplay.)\n./sneaver.py --record --nojp/--jp (Avoid or Only recording Japenese games.)\n./sneaver.py --record --noeu/--eu (Avoid or Only recording European games.)\n./sneaver.py --record --nous/--us (Avoid or Only recording American games.)\n./sneaver.py --record/--replay --genre [GENRE] To select a game by its genre.\n./sneaver.py --record/--replay --search [Name] To search for and select a specific rom.\n./sneaver.py --record --nolencheck Do not erase recorded videos that are less than 60s\n../sneaver.py --record --respawn Start the rom using its last auto save state.\n./sneaver.py --record --smartcrash Same as --respawn but without asking you after a crash.\n./sneaver.py --fl./sneaver.py --record --allowbad Ignore Blacklisted Roms.\n./sneaver.py --flushbad To erase bad roms list .\n./sneaver.py --compress To compress recorded videos before quitting.\n\n\nWhile in record mode Sneaver is using a credit system.\n./sneaver.py -badkid to remove some coins.\n./sneaver.py --record --godmode (To get rich)\n\nKeep pressing the Exit button multiple time if Snes9x ever crash.\n**Have fun !!\n"
     )
     print()
     sys.exit(1)
@@ -1990,11 +2072,33 @@ K00:Insert = QuickSave000
 def Rename(name, srcdir):
 
     badchar = ["(", ")", "[", "!", "]", " ", "_", "--", "'", '"', ",", "&"]
-
+    goodchar  = "abcdefghijklmnopqrstuvwxyz1234567890"
     mv = False
+
+    if name.endswith(".mkv"):
+         
+         tocompress = RwFile("compress.video", None, "r")
+         for mkv in tocompress:
+             if name in mkv:
+                  return
+
+
+         print("\n-Found a new .mkv to compress later :%s\n"%name)
+         RwFile("compress.video", str(srcdir) + str(name), "a+")
+         return
+
     for char in badchar:
         if char in name:
             mv = True
+    if name.endswith("-U") :
+            mv = True
+    elif name.endswith("-J"):
+            mv = True
+    elif name.endswith("-G"):
+            mv = True
+    elif name.endswith("-EU"):
+            mv = True
+
     if mv == True:
         print("Renaming : ", name)
         newname = (
@@ -2011,9 +2115,55 @@ def Rename(name, srcdir):
             .replace(",", "-")
             .replace("--", "-")
         )
-        newname = newname.replace("---", "-").replace("--", "-")
-        os.rename(srcdir + name, srcdir + newname)
-        print("\nNew Name is : ", newname)
+        newname = newname.replace("---", "-").replace("--", "-").strip()
+
+        while True:
+             if newname[-1].lower() not in goodchar:
+                newname = newname[:-1]
+             else:
+                if newname.endswith("-U") :
+                   newname = newname[:-2]
+                elif newname.endswith("-J"):
+                   newname = newname[:-2]
+                elif newname.endswith("-G"):
+                   newname = newname[:-2]
+                elif newname.endswith("-EU"):
+                   newname = newname[:-3]
+                break
+
+        if os.path.exists(srcdir + newname) is True:
+            print()
+            if os.path.isdir(srcdir + newname) is True:
+                 print("Directory already exist :",newname)
+                 print("Existing Directory %s content:\n"%newname)
+                 [print(i) for i in os.listdir(srcdir + newname)]
+                 print("\nAbout to DELETE this Directory:",srcdir + name)
+                 dircontent = [i for i in os.listdir(srcdir + name)]
+                 while True:
+                     answer = input("Do you want to remove this folder?\nContent of this Directory:\n %s \n\nDelete entire folder (yes/no)?:"%(dircontent))
+                     if answer == "yes":
+                           print("\n%s is deleted...\n\n"%srcdir + name)
+                           rmtree(srcdir + name)
+                           break
+                     elif answer != "no":
+                           print("\nKeeping:",name)
+                           break
+            else:
+                 print("File already exist :",newname)
+                 print("\nAbout to DELETE this file:",srcdir + name)
+                 while True:
+                     answer = input("Do you want to remove this file\nDeleting %s \n(yes/no)?:"%(srcdir + name))
+                     if answer == "yes":
+                           print("\n\n%s is Deleted...\n\n"%srcdir + name)
+                           os.remove(srcdir + name)
+                           break
+                     elif answer != "no":
+                           print("\nKeeping:",name)
+                           break
+
+        else:
+            os.rename(srcdir + name, srcdir + newname)
+            print("\nNew Name is : ", newname)
 
 
 def ScreenResize(mode):
@@ -2164,74 +2314,14 @@ def Speaker():
         return "default"
 
 
-def CompressVids():
-
-    global KILLLOAD
-
-    Pfig("\n-Compressing videos files found in compress.video-\n")
-    VidLst = RwFile("compress.video", None, "r")
-    if len(VidLst) > 0:
-        Pfig("\n-%s videos files in compress.video-\n" % len(VidLst))
-        time.sleep(1)
-    else:
-        Pfig("\n-No video found to be compressed-\n")
-        time.sleep(1)
-        return ()
-    for vfile in VidLst:
-        if len(vfile) > 2:
-            GifLauncher("Loading")
-
-            cmd = (
-                "ffmpeg -i "
-                + vfile
-                + " -acodec libvorbis -ab 128k -ac 2 -vcodec libx264 -preset superfast -crf 32 -maxrate 400k -bufsize 400k -threads 1 -stats "
-                + vfile.replace(".mkv", ".mp4")
-            )
-            print(cmd)
-            #              ffmpeg = subprocess.Popen(cmd,shell=True)
-            ffmpeg = subprocess.Popen(
-                cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-            )
-            output, error = ffmpeg.communicate()
-            fout = output.decode()
-
-            if "No such file or directory" in fout:
-                Pfig("!!!!!!!!!!!\nError while Trying to Open File!!\n!!!!!!!!!!!\n")
-                ffmpeg.terminate()
-                cmd = "pkill ffmpeg"
-                pkill = subprocess.Popen(cmd, shell=True)
-
-            WaitForMe("ffmpeg")
-
-            time.sleep(1)
-
-            if KILLLOAD != "":
-                cmd = "pkill " + KILLLOAD
-                pkill = subprocess.Popen(cmd, shell=True)
-                KILLLOAD = ""
-
-            Pfig("\n-Finished-\n")
-            Pfig(
-                "\n-Done Encoding "
-                + str(vfile).replace(".mkv", ".mp4")
-                + "-\n-Removing old "
-                + str(vfile)
-                + "-\n\n"
-            )
-            try:
-                os.remove(str(vfile))
-            except:
-                Pfig("\n Failed to remove file ..\n")
-    Pfig("\n-All Videos have been processed-\n")
-    Pfig("\n-Flushing compress.video-\n")
-    RwFile("compress.video", None, "w")
-    Pfig("\n-Done-\n")
 
 
 def RanDef():
     global SEARCH
+    global GENRE
     global SearchRom
 
+    MovLst = []
     if SEARCH is True:
         romret = ""
         romfiles = []
@@ -2243,9 +2333,24 @@ def RanDef():
 
             if IGNOREBAD == False:
                 BlackList()
+            if GENRE is True:
+                       AllowedRoms = RwFile("roms."+SearchCat+".snes", None, "r")
+                       Pfig("\n-%s roms in list matching %s genre-\n"%(len(AllowedRoms),SearchCat))
 
             for dirpath, dirnames, filenames in os.walk(DirMovies):
                 for name in filenames:
+                    if GENRE is True:
+                       Bingo = False
+                       for rms in AllowedRoms:
+                           if rms.lower().replace(" ","-") in name.lower():
+                                 Bingo = True
+                                 break
+                           elif rms.lower() in name.lower():
+                                 Bingo = True
+                                 break
+                       if Bingo is False:
+                           continue
+
                     if name.endswith(".sfc") or name.endswith(".smc"):
                         if SearchRom.lower() in name.lower():
                             if NOJP == True:
@@ -2284,7 +2389,26 @@ def RanDef():
                                 FOUNDONE = True
 
         if REPLAY == True:
-            MovLst = [i for i in os.listdir(DirMovies)]
+            if GENRE is False:
+                MovLst = [i for i in os.listdir(DirMovies)]
+            else:
+                OldLst = [i for i in os.listdir(DirMovies)]
+                AllowedRoms = RwFile("roms."+SearchCat+".snes", None, "r")
+                Pfig("\n-%s roms in list matching %s genre-\n"%(len(AllowedRoms),SearchCat))
+                for dname in OldLst:
+                    for rms in AllowedRoms:
+                        if rms.lower().replace(" ","-") in dname.lower():
+                           if dname not in MovLst:
+                              MovLst.append(dname)
+                        elif rms.lower() in dname.lower():
+                           if dname not in MovLst:
+                              MovLst.append(dname)
+                if len(MovLst) == 0:
+                   Pfig("\n-Couldn't find any roms matching %s genre inside Movies Folder-\n"%SearchCat)
+                   GENRE = False
+                else:
+                    Pfig("\n-Found %s roms matching %s genre-\n"%(len(MovLst),SearchCat))
+
             for dir in MovLst:
                 if SearchRom.lower() in dir.lower():
                     FOUNDONE = True
@@ -2326,7 +2450,7 @@ def RanDef():
                 while True:
                     answer = input("Please type your choice:")
                     if answer.isdigit() is True:
-                        if int(answer) in range(0, len(romfiles) - 1):
+                        if int(answer) in range(0, len(romfiles)):
                             return (romfiles[int(answer)], DirChosen[int(answer)])
                     if answer == "search":
                         SearchRom = input(
@@ -2369,7 +2493,27 @@ def RanDef():
             movfile = []
             FOUNDONE = False
 
-            MovLst = [i for i in os.listdir(DirMovies)]
+            if GENRE is False:
+                MovLst = [i for i in os.listdir(DirMovies)]
+            else:
+                OldLst = [i for i in os.listdir(DirMovies)]
+                AllowedRoms = RwFile("roms."+SearchCat+".snes", None, "r")
+                Pfig("\n-%s roms in list matching %s genre-\n"%(len(AllowedRoms),SearchCat))
+                for dname in OldLst:
+                    for rms in AllowedRoms:
+                        if rms.lower().replace(" ","-") in dname.lower():
+                           if dname not in MovLst:
+                              MovLst.append(dname)
+                        elif rms.lower() in dname.lower():
+                           if dname not in MovLst:
+                              MovLst.append(dname)
+                if len(MovLst) == 0:
+                   Pfig("\n-Couldn't find any roms matching %s genre inside Movies Folder-\n"%SearchCat)
+                   GENRE = False
+                else:
+                    Pfig("\n-Found %s roms matching %s genre-\n"%(len(MovLst),SearchCat))
+
+
 
             try:
                 rnd = random.randint(0, len(MovLst) - 1)
@@ -2482,9 +2626,9 @@ def LenCheck(DirChosen, newmovie):
             videolen = int(float(output.decode().strip()))
         except Exception as e:
             print("Error:%s\nFfprobe output:%s" % (str(e), output.decode()))
-            videolen = 42
+            videolen = 60
 
-        if videolen >= 42:
+        if videolen >= 60:
             Pfig("\n-Saving video path to compress it later-\n")
             RwFile("compress.video", str(DirChosen) + "/" + str(newmovie), "a+")
             print(
@@ -2492,7 +2636,7 @@ def LenCheck(DirChosen, newmovie):
             )
             Pfig("\n-Done-\n")
         else:
-            Pfig("\n-Recorded Video duration is less than 42 seconds-\n")
+            Pfig("\n-Recorded Video duration is less than 60 seconds-\n")
             Pfig("\n-Removing (use --nolencheck to prevent this) ...-\n")
             try:
                 os.remove(str(DirChosen) + "/" + str(newmovie))
@@ -2516,6 +2660,15 @@ if 1 == 1:
     ##Renaming
     MovLst = [i for i in os.listdir(DirMovies)]
     for name in MovLst:
+        if name.endswith(".sfc") or name.endswith(".smc"):
+           if not os.path.exists(DirMovies+name.replace(".sfc","").replace(".smc","")):
+                newdir = DirMovies+name.replace(".sfc","").replace(".smc","")
+                os.mkdir(newdir)
+                print("Found a Rom without any folder.\nPlacing %s inside it's new folder:\n%s"%(name,newdir))
+                os.rename(DirMovies+name,newdir+"/"+name)
+           else:
+                print("Found Rom outside it's folder :",name)
+                print("Folder Already Exist...")
         Rename(name, DirMovies)
     MovLst = [i for i in os.listdir(DirMovies)]
     for currentdir in MovLst:
@@ -2592,7 +2745,7 @@ if 1 == 1:
             if RESPAWN is True:
                 RESPAWN = False
                 if (
-                    os.path.exists(DirSaves + str(Container).replace(".smc", ".000"))
+                    os.path.exists(DirSaves + str(Container).replace(".smc", ".000").replace(".sfc",".000"))
                     is True
                 ):
                     cmd = (
@@ -2603,13 +2756,13 @@ if 1 == 1:
                         + "/"
                         + str(Container)
                         + " -loadsnapshot "
-                        + str(DirSaves + str(Container).replace(".smc", ".000"))
+                        + str(DirSaves + str(Container).replace(".smc", ".000").replace(".sfc",".000"))
                     )
                     Pfig("-Respawn using QuickSave.000-")
                     print(str(cmd) + "\n")
 
                 elif (
-                    os.path.exists(DirSaves + str(Container).replace(".smc", ".oops"))
+                    os.path.exists(DirSaves + str(Container).replace(".smc", ".oops").replace(".sfc",".oops"))
                     is True
                 ):
 
@@ -2621,7 +2774,7 @@ if 1 == 1:
                         + "/"
                         + str(Container)
                         + " -loadsnapshot "
-                        + str(DirSaves + str(Container).replace(".smc", ".oops"))
+                        + str(DirSaves + str(Container).replace(".smc", ".oops").replace(".sfc",".oops"))
                     )
                     Pfig("\n-Respawn using AutoSave.oops-\n")
                     print(str(cmd) + "\n")
@@ -2651,7 +2804,7 @@ if 1 == 1:
             sneaver = subprocess.Popen(cmd, shell=True)
 
             cmd = (
-                "padsp ffmpeg -loglevel error -f pulse -ar 32000 -i "
+                "padsp ffmpeg -y -loglevel error -f pulse -ar 32000 -i "
                 + str(devsound)
                 + " -f x11grab -r 24 -s "
                 + str(NEWRES)
@@ -2667,7 +2820,6 @@ if 1 == 1:
             failsafe = False
             while True:
                 WaitForMe("snes9x")
-                print("inside while")
 
                 if ERROR is True:
                     GifLauncher("Error")
@@ -2679,6 +2831,132 @@ if 1 == 1:
                     time.sleep(1)
                     ScreenResize("revert")
                     while True:
+                        if SMARTCRASH is True:
+                              GoodToGo = False
+                              CrashDate = datetime.datetime.now().replace(tzinfo=None)
+
+                              if CrashRom != Container:
+                                 CrashRom = Container
+                                 CrashCounter = 1
+                                 LastCrashDate = datetime.datetime.now().replace(tzinfo=None)
+                                 Pfig("-SmartCrash:-")
+                                 Pfig("-Crash timer started-")
+                                 GoodToGo = True
+                              else:
+
+                                  try:
+                                       ElapsedCrash = CrashDate - LastCrashDate
+                                       if ElapsedCrash.total_seconds() <= 300:
+                                          CrashCounter += 1
+                                          Pfig("-SmartCrash:")
+                                          Pfig("-CrashCounter:%s-"%str(CrashCounter))
+                                       else:
+                                          if CrashCounter > 1:
+                                             CrashCounter -= 1
+                                          GoodToGo = True
+                                  except Exception as e:
+                                       print("SmartCrashError:",str(e))
+
+                                  if CrashCounter >= 3:
+                                     Pfig("-SmartCrash:-")
+                                     RwFile("bad.roms", str(Container), "a")
+                                     Pfig("-Rom: " + str(Container) + " Blacklisted..-")
+                                     CrashCounter = 0
+                                  else:
+                                      LastCrashDate = datetime.datetime.now().replace(tzinfo=None)
+                                      GoodToGo = True
+
+                              if GoodToGo is True:
+                                 newmovie = (
+                                     str(datetime.datetime.now().strftime("%y-%m-%d-%H-%M"))
+                                     + ".mkv"
+                                 )
+
+                                 if (
+                                     os.path.exists(
+                                         DirSaves + str(Container).replace(".smc", ".000").replace(".sfc",".000")
+                                     )
+                                     is True
+                                 ):
+
+                                     cmd = (
+                                         "padsp ffmpeg -y -loglevel error -f pulse -ar 32000 -i "
+                                         + str(devsound)
+                                         + " -f x11grab -r 24 -s "
+                                         + str(NEWRES)
+                                         + " -i :0.0 -acodec pcm_s16le -vcodec libx264 -preset ultrafast -crf 0 -threads 0 "
+                                         + str(DirChosen)
+                                         + "/"
+                                         + str(newmovie)
+                                     )
+
+                                     Pfig("\n-Recording Screen-\n")
+                                     print(cmd)
+                                     ffmpeg = subprocess.Popen(cmd, shell=True)
+
+                                     ScreenResize("change")
+
+                                     cmd = (
+                                         "/usr/bin/padsp snes9x -nostdconf -conf "
+                                         + str(DirData)
+                                         + "sneaver.conf -maxaspect -fullscreen -xvideo "
+                                         + str(DirChosen)
+                                         + "/"
+                                         + str(Container)
+                                         + " -loadsnapshot "
+                                         + str(
+                                             DirSaves
+                                             + str(Container).replace(".smc", ".000").replace(".sfc",".000")
+                                         )
+                                     )
+                                     Pfig("-Respawn using QuickSave.000-")
+                                     print(str(cmd) + "\n")
+                                     sneaver = subprocess.Popen(cmd, shell=True)
+                                 elif (
+                                     os.path.exists(
+                                         DirSaves + str(Container).replace(".smc", ".oops").replace(".sfc",".oops")
+                                     )
+                                     is True
+                                 ):
+
+                                     cmd = (
+                                         "padsp ffmpeg -y -loglevel error -f pulse -ar 32000 -i "
+                                         + str(devsound)
+                                         + " -f x11grab -r 24 -s "
+                                         + str(NEWRES)
+                                         + " -i :0.0 -acodec pcm_s16le -vcodec libx264 -preset ultrafast -crf 0 -threads 0 "
+                                         + str(DirChosen)
+                                         + "/"
+                                         + str(newmovie)
+                                     )
+                                     Pfig("\n-Recording Screen-\n")
+                                     print(cmd)
+                                     ffmpeg = subprocess.Popen(cmd, shell=True)
+
+                                     cmd = (
+                                         "/usr/bin/padsp snes9x -nostdconf -conf "
+                                         + str(DirData)
+                                         + "sneaver.conf -maxaspect -fullscreen -xvideo "
+                                         + str(DirChosen)
+                                         + "/"
+                                         + str(Container)
+                                         + " -loadsnapshot "
+                                         + str(
+                                             DirSaves
+                                             + str(Container).replace(".smc", ".oops").replace(".sfc",".oops")
+                                         )
+                                     )
+                                     Pfig("\n-Respawn using AutoSave.oops-\n")
+                                     print(str(cmd) + "\n")
+                                     sneaver = subprocess.Popen(cmd, shell=True)
+                                 else:
+                                     failsafe = True
+                                     Pfig("\n-Error: [RESPAWN] No Auto-Save Found.-\n")
+
+                                 break
+
+
+
                         answer = input(
                             "Snes9x has crashed would you like to restart the game using the last autosave ? (y/n):"
                         )
@@ -2691,13 +2969,13 @@ if 1 == 1:
 
                             if (
                                 os.path.exists(
-                                    DirSaves + str(Container).replace(".smc", ".000")
+                                    DirSaves + str(Container).replace(".smc", ".000").replace(".sfc",".000")
                                 )
                                 is True
                             ):
 
                                 cmd = (
-                                    "padsp ffmpeg -loglevel error -f pulse -ar 32000 -i "
+                                    "padsp ffmpeg -y -loglevel error -f pulse -ar 32000 -i "
                                     + str(devsound)
                                     + " -f x11grab -r 24 -s "
                                     + str(NEWRES)
@@ -2731,13 +3009,13 @@ if 1 == 1:
                                 sneaver = subprocess.Popen(cmd, shell=True)
                             elif (
                                 os.path.exists(
-                                    DirSaves + str(Container).replace(".smc", ".oops")
+                                    DirSaves + str(Container).replace(".smc", ".oops").replace(".sfc",".oops")
                                 )
                                 is True
                             ):
 
                                 cmd = (
-                                    "padsp ffmpeg -loglevel error -f pulse -ar 32000 -i "
+                                    "padsp ffmpeg -y -loglevel error -f pulse -ar 32000 -i "
                                     + str(devsound)
                                     + " -f x11grab -r 24 -s "
                                     + str(NEWRES)
@@ -2760,7 +3038,7 @@ if 1 == 1:
                                     + " -loadsnapshot "
                                     + str(
                                         DirSaves
-                                        + str(Container).replace(".smc", ".oops")
+                                        + str(Container).replace(".smc", ".oops").replace(".sfc",".oops")
                                     )
                                 )
                                 Pfig("\n-Respawn using AutoSave.oops-\n")
@@ -2787,7 +3065,6 @@ if 1 == 1:
                     ERROR = False
                 else:
                     break
-            print("outside while")
             pkill = subprocess.Popen("pkill ffmpeg", shell=True)
             WaitForMe("ffmpeg")
             time.sleep(1)

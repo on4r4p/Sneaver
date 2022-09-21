@@ -16,6 +16,8 @@ CrashDate = ""
 LastCrashDate = ""
 CrashRom = ""
 CrashCounter = 0
+GoodToGo = False
+RomIndex = 0
 WALLET = 0
 KILLLOAD = ""
 OLDSCREEN = ""
@@ -193,6 +195,7 @@ def WaitForMe(process):
                 time.sleep(1)
             except Exception as e:
                 if "returned non-zero exit status 1" in str(e):
+                    Pfig("-Process %s has ended-"%process)
                     return
                 else:
                     Pfig("Error WaitForMe:" + str(e))
@@ -2320,7 +2323,7 @@ def RanDef():
     global SEARCH
     global GENRE
     global SearchRom
-
+    global RomIndex
     MovLst = []
     if SEARCH is True:
         romret = ""
@@ -2442,6 +2445,8 @@ def RanDef():
 
         if RECORD == True and FOUNDONE == True:
             try:
+                if SMARTCRASH is True and GoodToGo is True:
+                   return (romfiles[RomIndex], DirChosen[RomIndex])
                 for n, rom in enumerate(romfiles):
                     print("-To choose: %s type number: %s" % (rom, n))
                 print("-To search for another game type: search")
@@ -2451,6 +2456,7 @@ def RanDef():
                     answer = input("Please type your choice:")
                     if answer.isdigit() is True:
                         if int(answer) in range(0, len(romfiles)):
+                            RomIndex = int(answer)
                             return (romfiles[int(answer)], DirChosen[int(answer)])
                     if answer == "search":
                         SearchRom = input(
@@ -2737,7 +2743,7 @@ if 1 == 1:
                     break
 
             ScreenResize("change")
-
+            time.sleep(5)
             newmovie = str(datetime.datetime.now().strftime("%y-%m-%d-%H-%M")) + ".mkv"
 
             Pfig("\n-Recording now-\n" + (newmovie))
@@ -2825,11 +2831,16 @@ if 1 == 1:
                     GifLauncher("Error")
                     WALLET = WALLET + 1
                     pkill = subprocess.Popen("pkill ffmpeg", shell=True)
+                    time.sleep(1)
+                    pkill = subprocess.Popen("pkill ffmpeg", shell=True) # just in case
                     WaitForMe("ffmpeg")
                     Pfig("\n-Changing back Screen Resolution-\n" + str(OLDSCREEN))
                     LenCheck(DirChosen, newmovie)
                     time.sleep(1)
                     ScreenResize("revert")
+                    time.sleep(5) #tmpfix to wait for screen before launchin ffmpeg
+                    cmd = "xset r on"
+                    xset = subprocess.Popen(cmd, shell=True)
                     while True:
                         if SMARTCRASH is True:
                               GoodToGo = False
@@ -2891,11 +2902,10 @@ if 1 == 1:
                                      )
 
                                      Pfig("\n-Recording Screen-\n")
-                                     print(cmd)
-                                     ffmpeg = subprocess.Popen(cmd, shell=True)
-
                                      ScreenResize("change")
-
+                                     print(cmd)
+                                     time.sleep(5)
+                                     ffmpeg = subprocess.Popen(cmd, shell=True)
                                      cmd = (
                                          "/usr/bin/padsp snes9x -nostdconf -conf "
                                          + str(DirData)
@@ -2985,11 +2995,11 @@ if 1 == 1:
                                     + str(newmovie)
                                 )
 
+                                ScreenResize("change")
+                                time.sleep(5)
                                 Pfig("\n-Recording Screen-\n")
                                 print(cmd)
                                 ffmpeg = subprocess.Popen(cmd, shell=True)
-
-                                ScreenResize("change")
 
                                 cmd = (
                                     "/usr/bin/padsp snes9x -nostdconf -conf "
@@ -3071,6 +3081,7 @@ if 1 == 1:
 
             Pfig("\n-Changing back Screen Resolution-\n" + str(OLDSCREEN))
             ScreenResize("revert")
+            time.sleep(5)
             if failsafe is False:
                 Pfig("\n-Your game session has been recorded with success !-\n")
                 LenCheck(DirChosen, newmovie)

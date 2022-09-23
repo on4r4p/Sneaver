@@ -46,6 +46,7 @@ NOLENCHECK = False
 COMPRESS = False
 RESPAWN = False
 SMARTCRASH = False
+CHANGEGAME = False
 RECORD = False
 REPLAY = False
 CONFIG = False
@@ -1610,7 +1611,7 @@ def ManualExit():
 
 def PressStart(gamename):
     global CHECKPOINT
-
+    global CHANGEGAME
     CHECKPOINT = 0
 
     pygame.init()
@@ -1673,6 +1674,7 @@ def PressStart(gamename):
                         GifLauncher("NewGame")
                         return True
                     if str(event.button) == str(Select):
+                        CHANGEGAME = True
                         GifLauncher("InsertCoin")
                         return False
                 elif event.type == pygame.JOYBUTTONDOWN:
@@ -1680,6 +1682,7 @@ def PressStart(gamename):
                         GifLauncher("NewGame")
                         return True
                     if str(event.button) == str(Select):
+                        CHANGEGAME = True
                         GifLauncher("InsertCoin")
                         return False
     #                    else:
@@ -2324,6 +2327,9 @@ def RanDef():
     global GENRE
     global SearchRom
     global RomIndex
+    global CHANGEGAME
+    global GoodToGo
+
     MovLst = []
     if SEARCH is True:
         romret = ""
@@ -2445,8 +2451,11 @@ def RanDef():
 
         if RECORD == True and FOUNDONE == True:
             try:
-                if SMARTCRASH is True and GoodToGo is True:
+                if SMARTCRASH is True and GoodToGo is True and CHANGEGAME is False:
                    return (romfiles[RomIndex], DirChosen[RomIndex])
+                elif CHANGEGAME is True:
+                    GoodToGo = False
+                    CHANGEGAME = False
                 for n, rom in enumerate(romfiles):
                     print("-To choose: %s type number: %s" % (rom, n))
                 print("-To search for another game type: search")

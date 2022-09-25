@@ -473,7 +473,7 @@ def CompressVids():
                 ffmpeg.terminate()
                 cmd = "pkill ffmpeg"
                 pkill = subprocess.Popen(cmd, shell=True)
-
+                time.sleep(2)
             WaitForMe("ffmpeg")
 
             time.sleep(1)
@@ -2695,6 +2695,29 @@ if 1 == 1:
         Configuration()
     elif os.path.exists(DirData + "sneaver.conf") == False:
         Configuration()
+    elif os.path.exists(DirData + "sneaver.conf") == True:
+         newfile = []
+         thegoodplace = False
+         with open(DirData + "sneaver.conf","r") as f:
+            lines  = f.readlines()
+            lines  = [l.strip() for l in lines if l.strip()]
+         for l in lines:
+             if "BaseDir = " in l:
+                 basedir = l.split("BaseDir = ")[1]
+                 if basedir != str(DirData):
+                      Pfig("-Sneaver Data folder's emplacement has changed-")
+                      Pfig("-Saving current emplacement to sneaver.conf-")
+                      newfile.append("BaseDir = "+str(DirData))
+                 else:
+                    thegoodplace = True
+                    break
+             else:     
+                 newfile.append(l)
+         if thegoodplace is False:
+            with open(DirData + "sneaver.conf","w") as f:
+               f.writelines('\n'.join(newfile))
+            Pfig("-Done-")
+            time.sleep(2)
 
     if REPLAY == True:
 
@@ -2838,14 +2861,15 @@ if 1 == 1:
 
                 if ERROR is True:
                     GifLauncher("Error")
+                    time.sleep(1)
                     WALLET = WALLET + 1
                     pkill = subprocess.Popen("pkill ffmpeg", shell=True)
-                    time.sleep(1)
+                    time.sleep(2)
                     pkill = subprocess.Popen("pkill ffmpeg", shell=True) # just in case
                     WaitForMe("ffmpeg")
                     Pfig("\n-Changing back Screen Resolution-\n" + str(OLDSCREEN))
                     LenCheck(DirChosen, newmovie)
-                    time.sleep(1)
+                    time.sleep(2)
                     ScreenResize("revert")
                     time.sleep(5) #tmpfix to wait for screen before launchin ffmpeg
                     cmd = "xset r on"
@@ -3020,7 +3044,7 @@ if 1 == 1:
                                     + " -loadsnapshot "
                                     + str(
                                         DirSaves
-                                        + str(Container).replace(".smc", ".000")
+                                        + str(Container).replace(".smc", ".000").replace(".sfc",".000")
                                     )
                                 )
                                 Pfig("-Respawn using QuickSave.000-")
@@ -3086,7 +3110,7 @@ if 1 == 1:
                     break
             pkill = subprocess.Popen("pkill ffmpeg", shell=True)
             WaitForMe("ffmpeg")
-            time.sleep(1)
+            time.sleep(2)
 
             Pfig("\n-Changing back Screen Resolution-\n" + str(OLDSCREEN))
             ScreenResize("revert")

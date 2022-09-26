@@ -207,8 +207,7 @@ def WaitForMe(process):
                 time.sleep(1)
             except Exception as e:
                 if "returned non-zero exit status 1" in str(e):
-                    if DEBUG is True:
-                         Pfig("-Process %s has ended-" % process)
+                    #Pfig("-Process %s has ended-" % process)
                     return
                 else:
                     Pfig("Error WaitForMe:" + str(e))
@@ -2702,9 +2701,8 @@ def RanDef():
 def LenCheck(DirChosen, newmovie):
 
     if not os.path.exists(str(DirChosen)+"/"+str(newmovie)):
-         if DEBUG is True:
-                Pfig("\n-File not found :-")
-                print(str(DirChosen)+"/"+str(newmovie)+"\n")
+         Pfig("\n-File not saved :-")
+         print(str(DirChosen)+"/"+str(newmovie)+"\n")
          return()
 
     if NOLENCHECK is False:

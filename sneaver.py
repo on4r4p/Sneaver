@@ -207,7 +207,8 @@ def WaitForMe(process):
                 time.sleep(1)
             except Exception as e:
                 if "returned non-zero exit status 1" in str(e):
-                    Pfig("-Process %s has ended-" % process)
+                    if DEBUG is True:
+                         Pfig("-Process %s has ended-" % process)
                     return
                 else:
                     Pfig("Error WaitForMe:" + str(e))
@@ -2490,7 +2491,7 @@ def RanDef():
                 print("-To search for a genre type: genre")
                 print("-To search both for a genre and a specific game type: both")
                 print("-To play a random game type: random")
-                print("-To quite type: quite")
+                print("-To quit type: quit")
 
                 while True:
                     answer = input("Please type your choice:")
@@ -2500,12 +2501,15 @@ def RanDef():
                             return (romfiles[int(answer)], DirChosen[int(answer)])
                     if answer == "search":
                         SEARCH = True
+                        GENRE = False
                         SearchRom = input(
                             "Please enter the rom you would like to search:"
                         )
                         return RanDef()
                     if answer == "genre":
                         while True:
+                            GENRE = True
+                            SEARCH = True
                             SearchCat = input(
                                 "Please enter a genre you would like to search:"
                             )
@@ -2521,11 +2525,11 @@ def RanDef():
                         SEARCH = True
                         GENRE = True
                         SearchRom = input(
-                            "Please enter the rom you would like to search:"
+                            "Please enter a name of rom:"
                         )
                         while True:
                             SearchCat = input(
-                                "Please enter a genre you would like to search:"
+                                "Please enter a genre:"
                             )
                             if SearchCat not in Category:
                                 print(
@@ -2538,7 +2542,7 @@ def RanDef():
                     if answer == "random":
                         SEARCH = False
                         return RanDef()
-                    if answer == "quite":
+                    if answer == "quit":
                         return GetOut()
 
             #                         rnd = random.randint(0,len(romfiles)-1)

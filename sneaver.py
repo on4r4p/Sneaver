@@ -2379,9 +2379,9 @@ def RanDef():
                     "\n-%s roms in list matching %s genre-\n"
                     % (len(AllowedRoms), SearchCat)
                 )
-            print(RESPAWN)
-            pause = input("respawn")
-            if RESPAWN is False :
+            if RESPAWN is True:
+                FOUNDONE = True
+            else:
                 for dirpath, dirnames, filenames in os.walk(DirMovies):
                     for name in filenames:
                         if GENRE is True:
@@ -2864,6 +2864,7 @@ if 1 == 1:
         while True:
             WaitForMe("snes9x")
             WaitForMe("ffmpeg")
+
             if RESPAWN:
                Container,DirChosen = RwFile("last.played",None,"r")
                if not Container and not DirChosen:
@@ -2888,6 +2889,7 @@ if 1 == 1:
                 Reslt = PressStart(str(DirChosen))
                 if Reslt is False:
                     Pfig("\n-Choosing another random game..-\n")
+                    RESPAWN = False
                     Container, DirChosen = RanDef()
                     time.sleep(1)
                 else:
@@ -2901,7 +2903,7 @@ if 1 == 1:
             Pfig("\n-Recording now-\n" + (newmovie))
 
             if RESPAWN is True:
-                RESPAWN = False
+#                RESPAWN = False
                 if (
                     os.path.exists(
                         DirSaves

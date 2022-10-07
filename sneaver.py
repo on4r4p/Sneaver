@@ -2355,6 +2355,7 @@ def Speaker():
 def RanDef():
     global SEARCH
     global GENRE
+    global RESPAWN
     global SearchRom
     global SearchCat
     global RomIndex

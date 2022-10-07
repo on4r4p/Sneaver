@@ -135,6 +135,21 @@ def RwFile(filename, data, mode):
             elif mode == "w":
                 with open(DirData + filename, mode) as file:
                     file.close()
+
+        if filename == "last.played" and mode == "r":
+                ctn = None
+                dch = None
+                with open(DirData + filename, mode) as file:
+                    lines = file.readlines()
+                    lines = [l.strip() for l in lines]
+                    for l in lines:
+                        if "DirChosen=" in l:
+                            dch = l.split("DirChosen=")[1]
+                        if "Container=" in l:
+                            ctn = l.split("Container=")[1]
+
+                    return(ctn,dch)
+
         else:
 
             with open(DirData + filename, mode) as file:
@@ -2364,57 +2379,60 @@ def RanDef():
                     "\n-%s roms in list matching %s genre-\n"
                     % (len(AllowedRoms), SearchCat)
                 )
+            print(RESPAWN)
+            pause = input("respawn")
+            if RESPAWN is False :
+                for dirpath, dirnames, filenames in os.walk(DirMovies):
+                    for name in filenames:
+                        if GENRE is True:
+                            Bingo = False
+                            for rms in AllowedRoms:
+                                if rms.lower().replace(" ", "-") in name.lower():
+                                    Bingo = True
+                                    break
+                                elif rms.lower() in name.lower():
+                                    Bingo = True
+                                    break
+                            if Bingo is False:
+                                continue
 
-            for dirpath, dirnames, filenames in os.walk(DirMovies):
-                for name in filenames:
-                    if GENRE is True:
-                        Bingo = False
-                        for rms in AllowedRoms:
-                            if rms.lower().replace(" ", "-") in name.lower():
-                                Bingo = True
-                                break
-                            elif rms.lower() in name.lower():
-                                Bingo = True
-                                break
-                        if Bingo is False:
-                            continue
+                        if name.endswith(".sfc") or name.endswith(".smc"):
+                            if SearchRom.lower() in name.lower():
+                                if NOJP == True:
+                                    if not "-J-" in name and name not in BADROMS:
+                                        romfiles.append(name)
+                                        DirChosen.append(dirpath + "/")
+                                        FOUNDONE = True
+                                elif NOEU == True:
+                                    if not "-E-" in name and name not in BADROMS:
+                                        romfiles.append(name)
+                                        DirChosen.append(dirpath + "/")
+                                        FOUNDONE = True
+                                elif NOUS == True:
+                                    if not "-U-" in name and name not in BADROMS:
+                                        romfiles.append(name)
+                                        DirChosen.append(dirpath + "/")
+                                        FOUNDONE = True
+                                elif JP == True:
+                                    if "-J-" in name and name not in BADROMS:
+                                        romfiles.append(name)
+                                        DirChosen.append(dirpath + "/")
+                                        FOUNDONE = True
+                                elif EU == True:
+                                    if "-E-" in name and name not in BADROMS:
+                                        romfiles.append(name)
+                                        DirChosen.append(dirpath + "/")
+                                        FOUNDONE = True
+                                elif US == True:
+                                    if "-U-" in name and name not in BADROMS:
+                                        romfiles.append(name)
+                                        DirChosen.append(dirpath + "/")
+                                        FOUNDONE = True
+                                else:
+                                    romfiles.append(name)
+                                    DirChosen.append(dirpath + "/")
+                                    FOUNDONE = True
 
-                    if name.endswith(".sfc") or name.endswith(".smc"):
-                        if SearchRom.lower() in name.lower():
-                            if NOJP == True:
-                                if not "-J-" in name and name not in BADROMS:
-                                    romfiles.append(name)
-                                    DirChosen.append(dirpath + "/")
-                                    FOUNDONE = True
-                            elif NOEU == True:
-                                if not "-E-" in name and name not in BADROMS:
-                                    romfiles.append(name)
-                                    DirChosen.append(dirpath + "/")
-                                    FOUNDONE = True
-                            elif NOUS == True:
-                                if not "-U-" in name and name not in BADROMS:
-                                    romfiles.append(name)
-                                    DirChosen.append(dirpath + "/")
-                                    FOUNDONE = True
-                            elif JP == True:
-                                if "-J-" in name and name not in BADROMS:
-                                    romfiles.append(name)
-                                    DirChosen.append(dirpath + "/")
-                                    FOUNDONE = True
-                            elif EU == True:
-                                if "-E-" in name and name not in BADROMS:
-                                    romfiles.append(name)
-                                    DirChosen.append(dirpath + "/")
-                                    FOUNDONE = True
-                            elif US == True:
-                                if "-U-" in name and name not in BADROMS:
-                                    romfiles.append(name)
-                                    DirChosen.append(dirpath + "/")
-                                    FOUNDONE = True
-                            else:
-                                romfiles.append(name)
-                                DirChosen.append(dirpath + "/")
-                                FOUNDONE = True
 
         if REPLAY == True:
             if GENRE is False:
@@ -2490,6 +2508,7 @@ def RanDef():
                 print("-To search for a genre type: genre")
                 print("-To search both for a genre and a specific game type: both")
                 print("-To play a random game type: random")
+                print("-To respawn from the last game autosave type: respawn")
                 print("-To quit type: quit")
 
                 while True:
@@ -2498,6 +2517,13 @@ def RanDef():
                         if int(answer) in range(0, len(romfiles)):
                             RomIndex = int(answer)
                             return (romfiles[int(answer)], DirChosen[int(answer)])
+                    if answer == "respawn":
+                        SEARCH = False
+                        GENRE = False
+                        RESPAWN = True
+                        Pfig("\n\n-RESPAWN FROM LAST GAME-\n\n")
+                        return(RwFile("last.played",None,"r"))
+
                     if answer == "search":
                         SEARCH = True
                         GENRE = False
@@ -2702,7 +2728,7 @@ def LenCheck(DirChosen, newmovie):
 
     if not os.path.exists(str(DirChosen)+"/"+str(newmovie)):
          Pfig("\n-File not saved :-")
-         print(str(DirChosen)+"/"+str(newmovie)+"\n")
+         print(str(str(DirChosen)+"/"+str(newmovie)).replace("//","/")+"\n")
          return()
 
     if NOLENCHECK is False:
@@ -2711,7 +2737,7 @@ def LenCheck(DirChosen, newmovie):
             + str(DirChosen)
             + "/"
             + str(newmovie)
-        )
+        ).replace("//","/")
         ffprobe = subprocess.Popen(
             cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
@@ -2726,9 +2752,9 @@ def LenCheck(DirChosen, newmovie):
         if videolen >= 60:
             Pfig("\n-Your game session has been recorded with success !-\n")
             Pfig("\n-Saving video path to compress it later-\n")
-            RwFile("compress.video", str(DirChosen) + "/" + str(newmovie), "a+")
+            RwFile("compress.video", str(str(DirChosen) + "/" + str(newmovie)).replace("//","/"), "a+")
             print(
-                "Added %s to Data/compress.video" % str(DirChosen) + "/" + str(newmovie)
+                "Added %s to Data/compress.video" % str(str(DirChosen) + "/" + str(newmovie)).replace("//","/")
             )
             Pfig("\n-Done-\n")
         else:
@@ -2742,8 +2768,8 @@ def LenCheck(DirChosen, newmovie):
     else:
         Pfig("\n-Your game session has been recorded with success !-\n")
         Pfig("\n-Saving video path to compress it later-\n")
-        RwFile("compress.video", str(DirChosen) + "/" + str(newmovie), "a+")
-        print("Added %s to Data/compress.video" % str(DirChosen) + "/" + str(newmovie))
+        RwFile("compress.video", str(str(DirChosen) + "/" + str(newmovie)).replace("//","/"), "a+")
+        print("Added %s to Data/compress.video" % str(str(DirChosen) + "/" + str(newmovie)).replace("//","/"))
         Pfig("\n-Done-\n")
     time.sleep(1)
 
@@ -2838,7 +2864,13 @@ if 1 == 1:
         while True:
             WaitForMe("snes9x")
             WaitForMe("ffmpeg")
-            Container, DirChosen = RanDef()
+            if RESPAWN:
+               Container,DirChosen = RwFile("last.played",None,"r")
+               if not Container and not DirChosen:
+                   print("-Error with file last.played : opening a random rom instead")
+                   Container, DirChosen = RanDef()
+            else:
+                Container, DirChosen = RanDef()
 
             WALLET = int(WALLET)
 
@@ -2859,6 +2891,7 @@ if 1 == 1:
                     Container, DirChosen = RanDef()
                     time.sleep(1)
                 else:
+                    RwFile("last.played", str("DirChosen="+str(DirChosen) + "\nContainer=" + str(Container)).replace("//","/"), "w")
                     break
 
             ScreenResize("change")
@@ -2889,7 +2922,7 @@ if 1 == 1:
                             + str(Container)
                             .replace(".smc", ".000")
                             .replace(".sfc", ".000")
-                        )
+                        ).replace("//","/")
                     )
                     Pfig("-Respawn using QuickSave.000-")
                     print(str(cmd) + "\n")
@@ -2917,7 +2950,7 @@ if 1 == 1:
                             + str(Container)
                             .replace(".smc", ".oops")
                             .replace(".sfc", ".oops")
-                        )
+                        ).replace("//","/")
                     )
                     Pfig("\n-Respawn using AutoSave.oops-\n")
                     print(str(cmd) + "\n")
@@ -2931,7 +2964,7 @@ if 1 == 1:
                         + str(DirChosen)
                         + "/"
                         + str(Container)
-                    )
+                    ).replace("//","/")
             else:
                 cmd = (
                     "/usr/bin/padsp snes9x -nostdconf -conf "
@@ -2940,7 +2973,7 @@ if 1 == 1:
                     + str(DirChosen)
                     + "/"
                     + str(Container)
-                )
+                ).replace("//","/")
 
             Pfig("\n-Launching Snes9x-\n")
             print(cmd)
@@ -2955,7 +2988,7 @@ if 1 == 1:
                 + str(DirChosen)
                 + "/"
                 + str(newmovie)
-            )
+            ).replace("//","/")
 
             Pfig("\n-Recording Screen-\n")
             print(cmd)
@@ -3048,7 +3081,7 @@ if 1 == 1:
                                         + str(DirChosen)
                                         + "/"
                                         + str(newmovie)
-                                    )
+                                    ).replace("//","/")
 
                                     Pfig("\n-Recording Screen-\n")
                                     ScreenResize("change")
@@ -3068,7 +3101,7 @@ if 1 == 1:
                                             + str(Container)
                                             .replace(".smc", ".000")
                                             .replace(".sfc", ".000")
-                                        )
+                                        ).replace("//","/")
                                     )
                                     Pfig("-Respawn using QuickSave.000-")
                                     print(str(cmd) + "\n")
@@ -3092,7 +3125,7 @@ if 1 == 1:
                                         + str(DirChosen)
                                         + "/"
                                         + str(newmovie)
-                                    )
+                                    ).replace("//","/")
                                     Pfig("\n-Recording Screen-\n")
                                     print(cmd)
                                     ffmpeg = subprocess.Popen(cmd, shell=True)
@@ -3110,7 +3143,7 @@ if 1 == 1:
                                             + str(Container)
                                             .replace(".smc", ".oops")
                                             .replace(".sfc", ".oops")
-                                        )
+                                        ).replace("//","/")
                                     )
                                     Pfig("\n-Respawn using AutoSave.oops-\n")
                                     print(str(cmd) + "\n")
@@ -3150,7 +3183,7 @@ if 1 == 1:
                                     + str(DirChosen)
                                     + "/"
                                     + str(newmovie)
-                                )
+                                ).replace("//","/")
 
                                 ScreenResize("change")
                                 time.sleep(1)
@@ -3171,7 +3204,7 @@ if 1 == 1:
                                         + str(Container)
                                         .replace(".smc", ".000")
                                         .replace(".sfc", ".000")
-                                    )
+                                    ).replace("//","/")
                                 )
                                 Pfig("-Respawn using QuickSave.000-")
                                 print(str(cmd) + "\n")
@@ -3195,7 +3228,7 @@ if 1 == 1:
                                     + str(DirChosen)
                                     + "/"
                                     + str(newmovie)
-                                )
+                                ).replace("//","/")
                                 Pfig("\n-Recording Screen-\n")
                                 print(cmd)
                                 ffmpeg = subprocess.Popen(cmd, shell=True)
@@ -3213,7 +3246,7 @@ if 1 == 1:
                                         + str(Container)
                                         .replace(".smc", ".oops")
                                         .replace(".sfc", ".oops")
-                                    )
+                                    ).replace("//","/")
                                 )
                                 Pfig("\n-Respawn using AutoSave.oops-\n")
                                 print(str(cmd) + "\n")

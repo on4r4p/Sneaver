@@ -48,6 +48,7 @@ GENRE = False
 SEARCH = False
 ERROR = False
 GODMODE = False
+CHEAT = ""
 NOJP = False
 NOEU = False
 NOUS = False
@@ -567,6 +568,9 @@ if len(sys.argv) > 1:
     if "--replay" in sys.argv:
         REPLAY = True
 
+    if "--cheat" in sys.argv:
+        CHEAT = "-cheat "
+
     if "--config" in sys.argv:
         CONFIG = True
 
@@ -628,7 +632,7 @@ if len(sys.argv) > 1:
                 "How many coins do you want to remove from the wallet ? (Enter a number between 1 to 32) :"
             )
             if spanknbr.isdigit() == True:
-                if int(spanknbr) <= 32 and int(spanknbr) != 0:
+                if int(spanknbr) <= 99 and int(spanknbr) != 0:
                     break
         GifLauncher("BadBoy")
         if Coins != 0:
@@ -639,13 +643,13 @@ if len(sys.argv) > 1:
 
     if sys.argv[1] == "-h" or sys.argv[1] == "--help":
         print(
-            "\n**Sneaver is a script using snes9x and ffmpeg to play or watch a snes game at random.\n\n**Download a rom put it in its folder inside the Movies directory\n\n**Then launch sneaver ^^\n\n\n**Use :\n\n./sneaver.py --config (To configure your gamepads [Must be used at first launch])  \n\n./sneaver.py --record (For recording a random game.)\n./sneaver.py --replay (For watching all the movies recorded with ffplay.)\n\n./sneaver.py --record --nojp/--jp (Avoid or Only recording Japenese games.)\n./sneaver.py --record --noeu/--eu (Avoid or Only recording European games.)\n./sneaver.py --record --nous/--us (Avoid or Only recording American games.)\n\n./sneaver.py --record/--replay --search [Name] To search for and select a specific rom.\n\n./sneaver.py --record/--replay --genre [GENRE] To select a game by its genre.\n./sneaver.py --record --nolencheck Do not erase recorded videos that are less than 60s\n./sneaver.py --record --respawn Start the rom using its last auto save state.\n./sneaver.py --record --smartcrash Same as --respawn but without asking you after a crash.\n./sneaver.py --record --allowbad Ignore Blacklisted Roms.\n./sneaver.py --flushbad To erase bad roms list .\n\n./sneaver.py --compress To compress recorded videos before quitting.\n\n\nWhile in record mode Sneaver is using a credit system.\nWhen credits reaches Zero you can't play anymore.\nseaver --badkid to remove some coins.\n./sneaver.py --record --godmode (Unlimited coins)\n\n\nKeep pressing the Exit button multiple times if Snes9x ever crash.\n**Have fun !!\n"
+            "\n**Sneaver is a script using snes9x and ffmpeg to play or watch a snes game at random.\n\n**Download a rom put it in its folder inside the Movies directory\n\n**Then launch sneaver ^^\n\n\n**Use :\n\n./sneaver.py --config (To configure your gamepads [Must be used at first launch])  \n\n./sneaver.py --record (For recording a random game.)\n./sneaver.py --replay (For watching all the movies recorded with ffplay.)\n\n./sneaver.py --record --nojp/--jp (Avoid or Only recording Japenese games.)\n./sneaver.py --record --noeu/--eu (Avoid or Only recording European games.)\n./sneaver.py --record --nous/--us (Avoid or Only recording American games.)\n\n./sneaver.py --record/--replay --search [Name] To search for and select a specific rom.\n\n./sneaver.py --record/--replay --genre [GENRE] To select a game by its genre.\n./sneaver.py --record --nolencheck Do not erase recorded videos that are less than 60s\n./sneaver.py --record --respawn Start the rom using its last auto save state.\n./sneaver.py --record --smartcrash Same as --respawn but without asking you after a crash.\n./sneaver.py --record --allowbad Ignore Blacklisted Roms.\n./sneaver.py --flushbad To erase bad roms list .\n\n./sneaver.py --compress To compress recorded videos before quitting.\n\n\nWhile in record mode Sneaver is using a credit system.\nWhen credits reaches Zero you can't play anymore.\nYou are able to gain one coin each hour once sneaver is closed.\nseaver --badkid to remove some coins.\n./sneaver.py --record --godmode (Unlimited coins)\n\n./sneaver.py --record --cheat To enable cheat saved in Datas\cheat\somefile.cht\n\n\nKeep pressing the Exit button on your joypad (configured with --config) multiple times if Snes9x ever crash.\n**Have fun !!\n"
         )
         print()
         sys.exit(1)
 else:
     print(
-        "\n**Sneaver is a script using snes9x and ffmpeg to play or watch a snes game at random.\n\n**Download a rom put it in its folder inside the Movies directory\n\n**Then launch sneaver ^^\n\n\n**Use :\n\n./sneaver.py --config (To configure your gamepads [Must be used at first launch]).\n\n./sneaver.py --record (For recording a random game.)\n./sneaver.py --replay (For watching all the movies recorded with ffplay.)\n\n./sneaver.py --record --nojp/--jp (Avoid or Only recording Japenese games.)\n./sneaver.py --record --noeu/--eu (Avoid or Only recording European games.)\n./sneaver.py --record --nous/--us (Avoid or Only recording American games.)\n\n./sneaver.py --record/--replay --genre [GENRE] To select a game by its genre.\n./sneaver.py --record/--replay --search [Name] To search for and select a specific rom.\n\n./sneaver.py --record --nolencheck Do not erase recorded videos that are less than 60s\n./sneaver.py --record --respawn Start the rom using its last auto save state.\n./sneaver.py --record --smartcrash Same as --respawn but without asking you after a crash.\n./sneaver.py --record --allowbad Ignore Blacklisted Roms.\n./sneaver.py --flushbad To erase bad roms list .\n\n./sneaver.py --compress To compress recorded videos before quitting.\n\n\nWhile in record mode Sneaver is using a credit system.\n./sneaver.py -badkid to remove some coins.\n./sneaver.py --record --godmode (Unlimited coins)\n\nKeep pressing the Exit button multiple time if Snes9x ever crash.\n**Have fun !!\n"
+        "\n**Sneaver is a script using snes9x and ffmpeg to play or watch a snes game at random.\n\n**Download a rom put it in its folder inside the Movies directory\n\n**Then launch sneaver ^^\n\n\n**Use :\n\n./sneaver.py --config (To configure your gamepads [Must be used at first launch]).\n\n./sneaver.py --record (For recording a random game.)\n./sneaver.py --replay (For watching all the movies recorded with ffplay.)\n\n./sneaver.py --record --nojp/--jp (Avoid or Only recording Japenese games.)\n./sneaver.py --record --noeu/--eu (Avoid or Only recording European games.)\n./sneaver.py --record --nous/--us (Avoid or Only recording American games.)\n\n./sneaver.py --record/--replay --genre [GENRE] To select a game by its genre.\n./sneaver.py --record/--replay --search [Name] To search for and select a specific rom.\n\n./sneaver.py --record --nolencheck Do not erase recorded videos that are less than 60s\n./sneaver.py --record --respawn Start the rom using its last auto save state.\n./sneaver.py --record --smartcrash Same as --respawn but without asking you after a crash.\n./sneaver.py --record --allowbad Ignore Blacklisted Roms.\n./sneaver.py --flushbad To erase bad roms list .\n\n./sneaver.py --compress To compress recorded videos before quitting.\n./sneaver.py --record --cheat To enable cheat saved in Datas\cheat\somefile.cht\n\n\n\nWhile in record mode Sneaver is using a credit system.\nWhen credits reaches Zero you can't play anymore.\nYou are able to gain one coin each hour once sneaver is closed.\n\n./sneaver.py -badkid to remove some coins.\n./sneaver.py --record --godmode (Unlimited coins)\n\nKeep pressing the Exit button on your joypad (configured with --config) multiple time if Snes9x ever crash.\n**Have fun !!\n"
     )
     print()
     sys.exit(1)
@@ -654,6 +658,21 @@ if RECORD == True and REPLAY == True:
     print("\nArguments record and replay can't be used at the same time.\n\n")
     sys.exit(1)
 
+
+def BonusCoins():
+
+    try:
+       currentdate = datetime.datetime.now()
+       datefile = RwFile("last.closed", None, "r")
+       date_object = datetime.datetime.strptime(str(datefile).strip(), '%Y-%m-%d %H:%M:%S.%f')
+       laps = int((currentdate - date_object).total_seconds()/3600)
+       RwFile("last.closed", currentdate, "w")
+       return(laps)
+
+    except Exception as e:
+        RwFile("last.closed", currentdate, "w")
+        Pfig("Error:" + str(e))
+        return(0)
 
 def LoadCoin(mode):
     global WALLET
@@ -698,15 +717,17 @@ def LoadCoin(mode):
             Coins = int(RwFile("credits.save", None, "r"))
             if Coins < 0:
                 Coins = 0
+            Bonus = BonusCoins()
+            Coins = int(Coins) + Bonus
 
-            if Coins > 32:
-                Coins = 32
+            if Coins > 100:
+               Coins = 99
 
             WALLET = int(Coins)
             return
 
         else:
-            Coins = 33
+            Coins = 8
             WALLET = Coins
             return
 
@@ -1055,438 +1076,123 @@ def InsertCoin(coinsleft):
 
 def Cointing(credits):
 
+    numbers =[
+""" ▄▄▄▄▄▄▄▄▄▄▄ 
+▐░░░░░░░░░░░▌
+▐░█▀▀▀▀▀▀▀█░▌
+▐░▌       ▐░▌
+▐░▌       ▐░▌
+▐░▌       ▐░▌
+▐░▌       ▐░▌
+▐░▌       ▐░▌
+▐░█▄▄▄▄▄▄▄█░▌
+▐░░░░░░░░░░░▌
+ ▀▀▀▀▀▀▀▀▀▀▀ """
+,"""    ▄▄▄▄     
+  ▄█░░░░▌    
+ ▐░░▌▐░░▌    
+  ▀▀ ▐░░▌    
+     ▐░░▌    
+     ▐░░▌    
+     ▐░░▌    
+     ▐░░▌    
+ ▄▄▄▄█░░█▄▄▄ 
+▐░░░░░░░░░░░▌
+ ▀▀▀▀▀▀▀▀▀▀▀ """
+,""" ▄▄▄▄▄▄▄▄▄▄▄ 
+▐░░░░░░░░░░░▌
+ ▀▀▀▀▀▀▀▀▀█░▌
+          ▐░▌
+          ▐░▌
+ ▄▄▄▄▄▄▄▄▄█░▌
+▐░░░░░░░░░░░▌
+▐░█▀▀▀▀▀▀▀▀▀ 
+▐░█▄▄▄▄▄▄▄▄▄ 
+▐░░░░░░░░░░░▌
+ ▀▀▀▀▀▀▀▀▀▀▀ """
+,""" ▄▄▄▄▄▄▄▄▄▄▄ 
+▐░░░░░░░░░░░▌
+ ▀▀▀▀▀▀▀▀▀█░▌
+          ▐░▌
+ ▄▄▄▄▄▄▄▄▄█░▌
+▐░░░░░░░░░░░▌
+ ▀▀▀▀▀▀▀▀▀█░▌
+          ▐░▌
+ ▄▄▄▄▄▄▄▄▄█░▌
+▐░░░░░░░░░░░▌
+ ▀▀▀▀▀▀▀▀▀▀▀ """
+,""" ▄         ▄ 
+▐░▌       ▐░▌
+▐░▌       ▐░▌
+▐░▌       ▐░▌
+▐░█▄▄▄▄▄▄▄█░▌
+▐░░░░░░░░░░░▌
+ ▀▀▀▀▀▀▀▀▀█░▌
+          ▐░▌
+          ▐░▌
+          ▐░▌
+           ▀ """
+,""" ▄▄▄▄▄▄▄▄▄▄▄ 
+▐░░░░░░░░░░░▌
+▐░█▀▀▀▀▀▀▀▀▀ 
+▐░█▄▄▄▄▄▄▄▄▄ 
+▐░░░░░░░░░░░▌
+ ▀▀▀▀▀▀▀▀▀█░▌
+          ▐░▌
+          ▐░▌
+ ▄▄▄▄▄▄▄▄▄█░▌
+▐░░░░░░░░░░░▌
+ ▀▀▀▀▀▀▀▀▀▀▀ """
+,""" ▄▄▄▄▄▄▄▄▄▄▄ 
+▐░░░░░░░░░░░▌
+▐░█▀▀▀▀▀▀▀▀▀ 
+▐░▌          
+▐░█▄▄▄▄▄▄▄▄▄ 
+▐░░░░░░░░░░░▌
+▐░█▀▀▀▀▀▀▀█░▌
+▐░▌       ▐░▌
+▐░█▄▄▄▄▄▄▄█░▌
+▐░░░░░░░░░░░▌
+ ▀▀▀▀▀▀▀▀▀▀▀ """
+,""" ▄▄▄▄▄▄▄▄▄▄▄ 
+▐░░░░░░░░░░░▌
+ ▀▀▀▀▀▀▀▀▀█░▌
+         ▐░▌ 
+        ▐░▌  
+       ▐░▌   
+      ▐░▌    
+     ▐░▌     
+    ▐░▌      
+   ▐░▌       
+    ▀        """
+,""" ▄▄▄▄▄▄▄▄▄▄▄ 
+▐░░░░░░░░░░░▌
+▐░█▀▀▀▀▀▀▀█░▌
+▐░▌       ▐░▌
+▐░█▄▄▄▄▄▄▄█░▌
+ ▐░░░░░░░░░▌ 
+▐░█▀▀▀▀▀▀▀█░▌
+▐░▌       ▐░▌
+▐░█▄▄▄▄▄▄▄█░▌
+▐░░░░░░░░░░░▌
+ ▀▀▀▀▀▀▀▀▀▀▀ """,
+""" ▄▄▄▄▄▄▄▄▄▄▄ 
+▐░░░░░░░░░░░▌
+▐░█▀▀▀▀▀▀▀█░▌
+▐░▌       ▐░▌
+▐░█▄▄▄▄▄▄▄█░▌
+▐░░░░░░░░░░░▌
+ ▀▀▀▀▀▀▀▀▀█░▌
+          ▐░▌
+ ▄▄▄▄▄▄▄▄▄█░▌
+▐░░░░░░░░░░░▌
+ ▀▀▀▀▀▀▀▀▀▀▀ """]
+
+
+    tab = "                                               "
     middle = ""
 
-    if int(credits) == 1:
-        middle = """
-                                               ▄▄▄▄▄▄▄▄▄     ▄▄▄▄                                                    
-                                              ▐░░░░░░░░░▌  ▄█░░░░▌                                                   
-                                             ▐░█░█▀▀▀▀▀█░▌▐░░▌▐░░▌                                                   
-                                             ▐░▌▐░▌    ▐░▌ ▀▀ ▐░░▌                                                   
-                                             ▐░▌ ▐░▌   ▐░▌    ▐░░▌                                                   
-                                             ▐░▌  ▐░▌  ▐░▌    ▐░░▌                                                   
-                                             ▐░▌   ▐░▌ ▐░▌    ▐░░▌                                                   
-                                             ▐░▌    ▐░▌▐░▌    ▐░░▌                                                   
-                                             ▐░█▄▄▄▄▄█░█░▌▄▄▄▄█░░█▄▄▄                                                
-                                              ▐░░░░░░░░░▌▐░░░░░░░░░░░▌                                               
-                                               ▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀                                                """
-    if int(credits) == 2:
-        middle = """
-                                               ▄▄▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄▄▄▄▄                                               
-                                              ▐░░░░░░░░░▌ ▐░░░░░░░░░░░▌                                              
-                                             ▐░█░█▀▀▀▀▀█░▌ ▀▀▀▀▀▀▀▀▀█░▌                                              
-                                             ▐░▌▐░▌    ▐░▌          ▐░▌                                              
-                                             ▐░▌ ▐░▌   ▐░▌          ▐░▌                                              
-                                             ▐░▌  ▐░▌  ▐░▌ ▄▄▄▄▄▄▄▄▄█░▌                                              
-                                             ▐░▌   ▐░▌ ▐░▌▐░░░░░░░░░░░▌                                              
-                                             ▐░▌    ▐░▌▐░▌▐░█▀▀▀▀▀▀▀▀▀                                               
-                                             ▐░█▄▄▄▄▄█░█░▌▐░█▄▄▄▄▄▄▄▄▄                                               
-                                              ▐░░░░░░░░░▌ ▐░░░░░░░░░░░▌                                              
-                                               ▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀▀▀▀                                             """
-    if int(credits) == 3:
-        middle = """
-                                               ▄▄▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄▄▄▄▄                                               
-                                              ▐░░░░░░░░░▌ ▐░░░░░░░░░░░▌                                              
-                                             ▐░█░█▀▀▀▀▀█░▌ ▀▀▀▀▀▀▀▀▀█░▌                                              
-                                             ▐░▌▐░▌    ▐░▌          ▐░▌                                              
-                                             ▐░▌ ▐░▌   ▐░▌ ▄▄▄▄▄▄▄▄▄█░▌                                              
-                                             ▐░▌  ▐░▌  ▐░▌▐░░░░░░░░░░░▌                                              
-                                             ▐░▌   ▐░▌ ▐░▌ ▀▀▀▀▀▀▀▀▀█░▌                                              
-                                             ▐░▌    ▐░▌▐░▌          ▐░▌                                              
-                                             ▐░█▄▄▄▄▄█░█░▌ ▄▄▄▄▄▄▄▄▄█░▌                                              
-                                              ▐░░░░░░░░░▌ ▐░░░░░░░░░░░▌                                              
-                                               ▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀▀▀▀                                              """
-    if int(credits) == 4:
-        middle = """
-                                               ▄▄▄▄▄▄▄▄▄   ▄         ▄                                               
-                                              ▐░░░░░░░░░▌ ▐░▌       ▐░▌                                              
-                                             ▐░█░█▀▀▀▀▀█░▌▐░▌       ▐░▌                                              
-                                             ▐░▌▐░▌    ▐░▌▐░▌       ▐░▌                                              
-                                             ▐░▌ ▐░▌   ▐░▌▐░█▄▄▄▄▄▄▄█░▌                                              
-                                             ▐░▌  ▐░▌  ▐░▌▐░░░░░░░░░░░▌                                              
-                                             ▐░▌   ▐░▌ ▐░▌ ▀▀▀▀▀▀▀▀▀█░▌                                              
-                                             ▐░▌    ▐░▌▐░▌          ▐░▌                                              
-                                             ▐░█▄▄▄▄▄█░█░▌          ▐░▌                                              
-                                              ▐░░░░░░░░░▌           ▐░▌                                              
-                                               ▀▀▀▀▀▀▀▀▀             ▀                                              """
-    if int(credits) == 5:
-        middle = """
-                                               ▄▄▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄▄▄▄▄                                               
-                                              ▐░░░░░░░░░▌ ▐░░░░░░░░░░░▌                                              
-                                             ▐░█░█▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀▀▀                                               
-                                             ▐░▌▐░▌    ▐░▌▐░█▄▄▄▄▄▄▄▄▄                                               
-                                             ▐░▌ ▐░▌   ▐░▌▐░░░░░░░░░░░▌                                              
-                                             ▐░▌  ▐░▌  ▐░▌ ▀▀▀▀▀▀▀▀▀█░▌                                              
-                                             ▐░▌   ▐░▌ ▐░▌          ▐░▌                                              
-                                             ▐░▌    ▐░▌▐░▌          ▐░▌                                              
-                                             ▐░█▄▄▄▄▄█░█░▌ ▄▄▄▄▄▄▄▄▄█░▌                                              
-                                              ▐░░░░░░░░░▌ ▐░░░░░░░░░░░▌                                              
-                                               ▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀▀▀▀                                              """
-    if int(credits) == 6:
-        middle = """
-                                               ▄▄▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄▄▄▄▄                                               
-                                              ▐░░░░░░░░░▌ ▐░░░░░░░░░░░▌                                              
-                                             ▐░█░█▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀▀▀                                               
-                                             ▐░▌▐░▌    ▐░▌▐░▌                                                        
-                                             ▐░▌ ▐░▌   ▐░▌▐░█▄▄▄▄▄▄▄▄▄                                               
-                                             ▐░▌  ▐░▌  ▐░▌▐░░░░░░░░░░░▌                                              
-                                             ▐░▌   ▐░▌ ▐░▌▐░█▀▀▀▀▀▀▀█░▌                                              
-                                             ▐░▌    ▐░▌▐░▌▐░▌       ▐░▌                                              
-                                             ▐░█▄▄▄▄▄█░█░▌▐░█▄▄▄▄▄▄▄█░▌                                              
-                                              ▐░░░░░░░░░▌ ▐░░░░░░░░░░░▌                                              
-                                               ▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀▀▀▀                                              """
-    if int(credits) == 7:
-        middle = """
-                                               ▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄                                                
-                                              ▐░░░░░░░░░▌▐░░░░░░░░░░░▌                                               
-                                             ▐░█░█▀▀▀▀▀█░▌▀▀▀▀▀▀▀▀▀█░▌                                               
-                                             ▐░▌▐░▌    ▐░▌        ▐░▌                                                
-                                             ▐░▌ ▐░▌   ▐░▌       ▐░▌                                                 
-                                             ▐░▌  ▐░▌  ▐░▌      ▐░▌                                                  
-                                             ▐░▌   ▐░▌ ▐░▌     ▐░▌                                                   
-                                             ▐░▌    ▐░▌▐░▌    ▐░▌                                                    
-                                             ▐░█▄▄▄▄▄█░█░▌   ▐░▌                                                     
-                                              ▐░░░░░░░░░▌   ▐░▌                                                      
-                                               ▀▀▀▀▀▀▀▀▀     ▀                                                      """
-    if int(credits) == 8:
-        middle = """
-                                               ▄▄▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄▄▄▄▄                                               
-                                              ▐░░░░░░░░░▌ ▐░░░░░░░░░░░▌                                              
-                                             ▐░█░█▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀█░▌                                              
-                                             ▐░▌▐░▌    ▐░▌▐░▌       ▐░▌                                              
-                                             ▐░▌ ▐░▌   ▐░▌▐░█▄▄▄▄▄▄▄█░▌                                              
-                                             ▐░▌  ▐░▌  ▐░▌ ▐░░░░░░░░░▌                                               
-                                             ▐░▌   ▐░▌ ▐░▌▐░█▀▀▀▀▀▀▀█░▌                                              
-                                             ▐░▌    ▐░▌▐░▌▐░▌       ▐░▌                                              
-                                             ▐░█▄▄▄▄▄█░█░▌▐░█▄▄▄▄▄▄▄█░▌                                              
-                                              ▐░░░░░░░░░▌ ▐░░░░░░░░░░░▌                                              
-                                               ▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀▀▀▀                                              """
-    if int(credits) == 9:
-        middle = """
-                                               ▄▄▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄▄▄▄▄                                               
-                                              ▐░░░░░░░░░▌ ▐░░░░░░░░░░░▌                                              
-                                             ▐░█░█▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀█░▌                                              
-                                             ▐░▌▐░▌    ▐░▌▐░▌       ▐░▌                                              
-                                             ▐░▌ ▐░▌   ▐░▌▐░█▄▄▄▄▄▄▄█░▌                                              
-                                             ▐░▌  ▐░▌  ▐░▌▐░░░░░░░░░░░▌                                              
-                                             ▐░▌   ▐░▌ ▐░▌ ▀▀▀▀▀▀▀▀▀█░▌                                              
-                                             ▐░▌    ▐░▌▐░▌          ▐░▌                                              
-                                             ▐░█▄▄▄▄▄█░█░▌ ▄▄▄▄▄▄▄▄▄█░▌                                              
-                                              ▐░░░░░░░░░▌ ▐░░░░░░░░░░░▌                                              
-                                               ▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀▀▀▀                                              """
-    if int(credits) == 10:
-        middle = """
-                                                 ▄▄▄▄      ▄▄▄▄▄▄▄▄▄                                                 
-                                               ▄█░░░░▌    ▐░░░░░░░░░▌                                                
-                                              ▐░░▌▐░░▌   ▐░█░█▀▀▀▀▀█░▌                                               
-                                               ▀▀ ▐░░▌   ▐░▌▐░▌    ▐░▌                                               
-                                                  ▐░░▌   ▐░▌ ▐░▌   ▐░▌                                               
-                                                  ▐░░▌   ▐░▌  ▐░▌  ▐░▌                                               
-                                                  ▐░░▌   ▐░▌   ▐░▌ ▐░▌                                               
-                                                  ▐░░▌   ▐░▌    ▐░▌▐░▌                                               
-                                              ▄▄▄▄█░░█▄▄▄▐░█▄▄▄▄▄█░█░▌                                               
-                                             ▐░░░░░░░░░░░▌▐░░░░░░░░░▌                                                
-                                              ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀                                                 """
-    if int(credits) == 11:
-        middle = """
-                                                 ▄▄▄▄         ▄▄▄▄                                                   
-                                               ▄█░░░░▌      ▄█░░░░▌                                                  
-                                              ▐░░▌▐░░▌     ▐░░▌▐░░▌                                                  
-                                               ▀▀ ▐░░▌      ▀▀ ▐░░▌                                                  
-                                                  ▐░░▌         ▐░░▌                                                  
-                                                  ▐░░▌         ▐░░▌                                                  
-                                                  ▐░░▌         ▐░░▌                                                  
-                                                  ▐░░▌         ▐░░▌                                                  
-                                              ▄▄▄▄█░░█▄▄▄  ▄▄▄▄█░░█▄▄▄                                               
-                                             ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌                                              
-                                              ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀                                               """
-    if int(credits) == 12:
-        middle = """
-                                                 ▄▄▄▄      ▄▄▄▄▄▄▄▄▄▄▄                                               
-                                               ▄█░░░░▌    ▐░░░░░░░░░░░▌                                              
-                                              ▐░░▌▐░░▌     ▀▀▀▀▀▀▀▀▀█░▌                                              
-                                               ▀▀ ▐░░▌              ▐░▌                                              
-                                                  ▐░░▌              ▐░▌                                              
-                                                  ▐░░▌     ▄▄▄▄▄▄▄▄▄█░▌                                              
-                                                  ▐░░▌    ▐░░░░░░░░░░░▌                                              
-                                                  ▐░░▌    ▐░█▀▀▀▀▀▀▀▀▀                                               
-                                              ▄▄▄▄█░░█▄▄▄ ▐░█▄▄▄▄▄▄▄▄▄                                               
-                                             ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌                                              
-                                              ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀                                              """
-    if int(credits) == 13:
-        middle = """
-                                                 ▄▄▄▄      ▄▄▄▄▄▄▄▄▄▄▄                                               
-                                               ▄█░░░░▌    ▐░░░░░░░░░░░▌                                              
-                                              ▐░░▌▐░░▌     ▀▀▀▀▀▀▀▀▀█░▌                                              
-                                               ▀▀ ▐░░▌              ▐░▌                                              
-                                                  ▐░░▌     ▄▄▄▄▄▄▄▄▄█░▌                                              
-                                                  ▐░░▌    ▐░░░░░░░░░░░▌                                              
-                                                  ▐░░▌     ▀▀▀▀▀▀▀▀▀█░▌                                              
-                                                  ▐░░▌              ▐░▌                                              
-                                              ▄▄▄▄█░░█▄▄▄  ▄▄▄▄▄▄▄▄▄█░▌                                              
-                                             ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌                                              
-                                              ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀                                              """
-    if int(credits) == 14:
-        middle = """
-                                                 ▄▄▄▄  ▄         ▄                                                   
-                                               ▄█░░░░▌▐░▌       ▐░▌                                                  
-                                              ▐░░▌▐░░▌▐░▌       ▐░▌                                                  
-                                               ▀▀ ▐░░▌▐░▌       ▐░▌                                                  
-                                                  ▐░░▌▐░█▄▄▄▄▄▄▄█░▌                                                  
-                                                  ▐░░▌▐░░░░░░░░░░░▌                                                  
-                                                  ▐░░▌ ▀▀▀▀▀▀▀▀▀█░▌                                                  
-                                                  ▐░░▌          ▐░▌                                                  
-                                              ▄▄▄▄█░░█▄▄▄       ▐░▌                                                  
-                                             ▐░░░░░░░░░░░▌      ▐░▌                                                  
-                                              ▀▀▀▀▀▀▀▀▀▀▀        ▀                                                   """
-    if int(credits) == 15:
-        middle = """
-                                                 ▄▄▄▄      ▄▄▄▄▄▄▄▄▄▄▄                                               
-                                               ▄█░░░░▌    ▐░░░░░░░░░░░▌                                              
-                                              ▐░░▌▐░░▌    ▐░█▀▀▀▀▀▀▀▀▀                                               
-                                               ▀▀ ▐░░▌    ▐░█▄▄▄▄▄▄▄▄▄                                               
-                                                  ▐░░▌    ▐░░░░░░░░░░░▌                                              
-                                                  ▐░░▌     ▀▀▀▀▀▀▀▀▀█░▌                                              
-                                                  ▐░░▌              ▐░▌                                              
-                                                  ▐░░▌              ▐░▌                                              
-                                              ▄▄▄▄█░░█▄▄▄  ▄▄▄▄▄▄▄▄▄█░▌                                              
-                                             ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌                                              
-                                              ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀                                              """
-    if int(credits) == 16:
-        middle = """
-                                                 ▄▄▄▄      ▄▄▄▄▄▄▄▄▄▄▄                                               
-                                               ▄█░░░░▌    ▐░░░░░░░░░░░▌                                              
-                                              ▐░░▌▐░░▌    ▐░█▀▀▀▀▀▀▀▀▀                                               
-                                               ▀▀ ▐░░▌    ▐░▌                                                        
-                                                  ▐░░▌    ▐░█▄▄▄▄▄▄▄▄▄                                               
-                                                  ▐░░▌    ▐░░░░░░░░░░░▌                                              
-                                                  ▐░░▌    ▐░█▀▀▀▀▀▀▀█░▌                                              
-                                                  ▐░░▌    ▐░▌       ▐░▌                                              
-                                              ▄▄▄▄█░░█▄▄▄ ▐░█▄▄▄▄▄▄▄█░▌                                              
-                                             ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌                                              
-                                              ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀                                             """
-    if int(credits) == 17:
-        middle = """
-                                                 ▄▄▄▄   ▄▄▄▄▄▄▄▄▄▄▄                                                  
-                                               ▄█░░░░▌ ▐░░░░░░░░░░░▌                                                 
-                                              ▐░░▌▐░░▌  ▀▀▀▀▀▀▀▀▀█░▌                                                 
-                                               ▀▀ ▐░░▌          ▐░▌                                                  
-                                                  ▐░░▌         ▐░▌                                                   
-                                                  ▐░░▌        ▐░▌                                                    
-                                                  ▐░░▌       ▐░▌                                                     
-                                                  ▐░░▌      ▐░▌                                                      
-                                              ▄▄▄▄█░░█▄▄▄  ▐░▌                                                       
-                                             ▐░░░░░░░░░░░▌▐░▌                                                        
-                                              ▀▀▀▀▀▀▀▀▀▀▀  ▀                                                        """
-    if int(credits) == 18:
-        middle = """
-                                                 ▄▄▄▄      ▄▄▄▄▄▄▄▄▄▄▄                                               
-                                               ▄█░░░░▌    ▐░░░░░░░░░░░▌                                              
-                                              ▐░░▌▐░░▌    ▐░█▀▀▀▀▀▀▀█░▌                                              
-                                               ▀▀ ▐░░▌    ▐░▌       ▐░▌                                              
-                                                  ▐░░▌    ▐░█▄▄▄▄▄▄▄█░▌                                              
-                                                  ▐░░▌     ▐░░░░░░░░░▌                                               
-                                                  ▐░░▌    ▐░█▀▀▀▀▀▀▀█░▌                                              
-                                                  ▐░░▌    ▐░▌       ▐░▌                                              
-                                              ▄▄▄▄█░░█▄▄▄ ▐░█▄▄▄▄▄▄▄█░▌                                              
-                                             ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌                                              
-                                              ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀                                               """
-    if int(credits) == 19:
-        middle = """
-                                                 ▄▄▄▄      ▄▄▄▄▄▄▄▄▄▄▄                                               
-                                               ▄█░░░░▌    ▐░░░░░░░░░░░▌                                              
-                                              ▐░░▌▐░░▌    ▐░█▀▀▀▀▀▀▀█░▌                                              
-                                               ▀▀ ▐░░▌    ▐░▌       ▐░▌                                              
-                                                  ▐░░▌    ▐░█▄▄▄▄▄▄▄█░▌                                              
-                                                  ▐░░▌    ▐░░░░░░░░░░░▌                                              
-                                                  ▐░░▌     ▀▀▀▀▀▀▀▀▀█░▌                                              
-                                                  ▐░░▌              ▐░▌                                              
-                                              ▄▄▄▄█░░█▄▄▄  ▄▄▄▄▄▄▄▄▄█░▌                                              
-                                             ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌                                              
-                                              ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀                                               """
-    if int(credits) == 20:
-        middle = """
-                                              ▄▄▄▄▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄▄▄                                                
-                                             ▐░░░░░░░░░░░▌ ▐░░░░░░░░░▌                                               
-                                              ▀▀▀▀▀▀▀▀▀█░▌▐░█░█▀▀▀▀▀█░▌                                              
-                                                       ▐░▌▐░▌▐░▌    ▐░▌                                              
-                                                       ▐░▌▐░▌ ▐░▌   ▐░▌                                              
-                                              ▄▄▄▄▄▄▄▄▄█░▌▐░▌  ▐░▌  ▐░▌                                              
-                                             ▐░░░░░░░░░░░▌▐░▌   ▐░▌ ▐░▌                                              
-                                             ▐░█▀▀▀▀▀▀▀▀▀ ▐░▌    ▐░▌▐░▌                                              
-                                             ▐░█▄▄▄▄▄▄▄▄▄ ▐░█▄▄▄▄▄█░█░▌                                              
-                                             ▐░░░░░░░░░░░▌ ▐░░░░░░░░░▌                                               
-                                              ▀▀▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀▀                                                """
-    if int(credits) == 21:
-        middle = """
-                                              ▄▄▄▄▄▄▄▄▄▄▄     ▄▄▄▄                                                   
-                                             ▐░░░░░░░░░░░▌  ▄█░░░░▌                                                  
-                                              ▀▀▀▀▀▀▀▀▀█░▌ ▐░░▌▐░░▌                                                  
-                                                       ▐░▌  ▀▀ ▐░░▌                                                  
-                                                       ▐░▌     ▐░░▌                                                  
-                                              ▄▄▄▄▄▄▄▄▄█░▌     ▐░░▌                                                  
-                                             ▐░░░░░░░░░░░▌     ▐░░▌                                                  
-                                             ▐░█▀▀▀▀▀▀▀▀▀      ▐░░▌                                                  
-                                             ▐░█▄▄▄▄▄▄▄▄▄  ▄▄▄▄█░░█▄▄▄                                               
-                                             ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌                                              
-                                              ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀                                              """
-    if int(credits) == 22:
-        middle = """
-                                              ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄                                               
-                                             ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌                                              
-                                              ▀▀▀▀▀▀▀▀▀█░▌ ▀▀▀▀▀▀▀▀▀█░▌                                              
-                                                       ▐░▌          ▐░▌                                              
-                                                       ▐░▌          ▐░▌                                              
-                                              ▄▄▄▄▄▄▄▄▄█░▌ ▄▄▄▄▄▄▄▄▄█░▌                                              
-                                             ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌                                              
-                                             ▐░█▀▀▀▀▀▀▀▀▀ ▐░█▀▀▀▀▀▀▀▀▀                                               
-                                             ▐░█▄▄▄▄▄▄▄▄▄ ▐░█▄▄▄▄▄▄▄▄▄                                               
-                                             ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌                                              
-                                              ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀                                               """
-    if int(credits) == 23:
-        middle = """
-                                              ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄                                               
-                                             ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌                                              
-                                              ▀▀▀▀▀▀▀▀▀█░▌ ▀▀▀▀▀▀▀▀▀█░▌                                              
-                                                       ▐░▌          ▐░▌                                              
-                                                       ▐░▌ ▄▄▄▄▄▄▄▄▄█░▌                                              
-                                              ▄▄▄▄▄▄▄▄▄█░▌▐░░░░░░░░░░░▌                                              
-                                             ▐░░░░░░░░░░░▌ ▀▀▀▀▀▀▀▀▀█░▌                                              
-                                             ▐░█▀▀▀▀▀▀▀▀▀           ▐░▌                                              
-                                             ▐░█▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄█░▌                                              
-                                             ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌                                              
-                                              ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀                                               """
-    if int(credits) == 24:
-        middle = """
-                                              ▄▄▄▄▄▄▄▄▄▄▄  ▄         ▄ 
-                                             ▐░░░░░░░░░░░▌▐░▌       ▐░▌
-                                              ▀▀▀▀▀▀▀▀▀█░▌▐░▌       ▐░▌
-                                                       ▐░▌▐░▌       ▐░▌
-                                                       ▐░▌▐░█▄▄▄▄▄▄▄█░▌
-                                              ▄▄▄▄▄▄▄▄▄█░▌▐░░░░░░░░░░░▌
-                                             ▐░░░░░░░░░░░▌ ▀▀▀▀▀▀▀▀▀█░▌
-                                             ▐░█▀▀▀▀▀▀▀▀▀           ▐░▌
-                                             ▐░█▄▄▄▄▄▄▄▄▄           ▐░▌
-                                             ▐░░░░░░░░░░░▌          ▐░▌
-                                              ▀▀▀▀▀▀▀▀▀▀▀            ▀ 
-                                                                       """
-    if int(credits) == 25:
-        middle = """
-                                              ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄ 
-                                             ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
-                                              ▀▀▀▀▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀▀▀ 
-                                                       ▐░▌▐░█▄▄▄▄▄▄▄▄▄ 
-                                                       ▐░▌▐░░░░░░░░░░░▌
-                                              ▄▄▄▄▄▄▄▄▄█░▌ ▀▀▀▀▀▀▀▀▀█░▌
-                                             ▐░░░░░░░░░░░▌          ▐░▌
-                                             ▐░█▀▀▀▀▀▀▀▀▀           ▐░▌
-                                             ▐░█▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄█░▌
-                                             ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
-                                              ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀ 
-                                                                       """
-    if int(credits) == 26:
-        middle = """
-                                              ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄ 
-                                             ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
-                                              ▀▀▀▀▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀▀▀ 
-                                                       ▐░▌▐░▌          
-                                                       ▐░▌▐░█▄▄▄▄▄▄▄▄▄ 
-                                              ▄▄▄▄▄▄▄▄▄█░▌▐░░░░░░░░░░░▌
-                                             ▐░░░░░░░░░░░▌▐░█▀▀▀▀▀▀▀█░▌
-                                             ▐░█▀▀▀▀▀▀▀▀▀ ▐░▌       ▐░▌
-                                             ▐░█▄▄▄▄▄▄▄▄▄ ▐░█▄▄▄▄▄▄▄█░▌
-                                             ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
-                                              ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀ 
-                                                                       """
-
-    if int(credits) == 27:
-        middle = """
-                                              ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄ 
-                                             ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
-                                              ▀▀▀▀▀▀▀▀▀█░▌ ▀▀▀▀▀▀▀▀▀█░▌
-                                                       ▐░▌         ▐░▌ 
-                                                       ▐░▌        ▐░▌  
-                                              ▄▄▄▄▄▄▄▄▄█░▌       ▐░▌   
-                                             ▐░░░░░░░░░░░▌      ▐░▌    
-                                             ▐░█▀▀▀▀▀▀▀▀▀      ▐░▌     
-                                             ▐░█▄▄▄▄▄▄▄▄▄     ▐░▌      
-                                             ▐░░░░░░░░░░░▌   ▐░▌       
-                                              ▀▀▀▀▀▀▀▀▀▀▀     ▀        
-                                                                       """
-    if int(credits) == 28:
-        middle = """
-
-                                              ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄ 
-                                             ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
-                                              ▀▀▀▀▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀█░▌
-                                                       ▐░▌▐░▌       ▐░▌
-                                                       ▐░▌▐░█▄▄▄▄▄▄▄█░▌
-                                              ▄▄▄▄▄▄▄▄▄█░▌ ▐░░░░░░░░░▌ 
-                                             ▐░░░░░░░░░░░▌▐░█▀▀▀▀▀▀▀█░▌
-                                             ▐░█▀▀▀▀▀▀▀▀▀ ▐░▌       ▐░▌
-                                             ▐░█▄▄▄▄▄▄▄▄▄ ▐░█▄▄▄▄▄▄▄█░▌
-                                             ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
-                                              ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀ 
-                                                                       """
-    if int(credits) == 29:
-        middle = """
-                                              ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄ 
-                                             ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
-                                              ▀▀▀▀▀▀▀▀▀█░▌▐░█▀▀▀▀▀▀▀█░▌
-                                                       ▐░▌▐░▌       ▐░▌
-                                                       ▐░▌▐░█▄▄▄▄▄▄▄█░▌
-                                              ▄▄▄▄▄▄▄▄▄█░▌▐░░░░░░░░░░░▌
-                                             ▐░░░░░░░░░░░▌ ▀▀▀▀▀▀▀▀▀█░▌
-                                             ▐░█▀▀▀▀▀▀▀▀▀           ▐░▌
-                                             ▐░█▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄█░▌
-                                             ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
-                                              ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀ 
-                                                                       """
-
-    if int(credits) == 30:
-        middle = """
-                                              ▄▄▄▄▄▄▄▄▄▄▄   ▄▄▄▄▄▄▄▄▄  
-                                             ▐░░░░░░░░░░░▌ ▐░░░░░░░░░▌ 
-                                              ▀▀▀▀▀▀▀▀▀█░▌▐░█░█▀▀▀▀▀█░▌
-                                                       ▐░▌▐░▌▐░▌    ▐░▌
-                                              ▄▄▄▄▄▄▄▄▄█░▌▐░▌ ▐░▌   ▐░▌
-                                             ▐░░░░░░░░░░░▌▐░▌  ▐░▌  ▐░▌
-                                              ▀▀▀▀▀▀▀▀▀█░▌▐░▌   ▐░▌ ▐░▌
-                                                       ▐░▌▐░▌    ▐░▌▐░▌
-                                              ▄▄▄▄▄▄▄▄▄█░▌▐░█▄▄▄▄▄█░█░▌
-                                             ▐░░░░░░░░░░░▌ ▐░░░░░░░░░▌ 
-                                              ▀▀▀▀▀▀▀▀▀▀▀   ▀▀▀▀▀▀▀▀▀  
-                                                                       """
-    if int(credits) == 31:
-        middle = """
-                                              ▄▄▄▄▄▄▄▄▄▄▄     ▄▄▄▄     
-                                             ▐░░░░░░░░░░░▌  ▄█░░░░▌    
-                                              ▀▀▀▀▀▀▀▀▀█░▌ ▐░░▌▐░░▌    
-                                                       ▐░▌  ▀▀ ▐░░▌    
-                                              ▄▄▄▄▄▄▄▄▄█░▌     ▐░░▌    
-                                             ▐░░░░░░░░░░░▌     ▐░░▌    
-                                              ▀▀▀▀▀▀▀▀▀█░▌     ▐░░▌    
-                                                       ▐░▌     ▐░░▌    
-                                              ▄▄▄▄▄▄▄▄▄█░▌ ▄▄▄▄█░░█▄▄▄ 
-                                             ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
-                                              ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀ 
-                                                                       """
-    if int(credits) == 32:
-        middle = """
-                                              ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄ 
-                                             ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
-                                              ▀▀▀▀▀▀▀▀▀█░▌ ▀▀▀▀▀▀▀▀▀█░▌
-                                                       ▐░▌          ▐░▌
-                                              ▄▄▄▄▄▄▄▄▄█░▌          ▐░▌
-                                             ▐░░░░░░░░░░░▌ ▄▄▄▄▄▄▄▄▄█░▌
-                                              ▀▀▀▀▀▀▀▀▀█░▌▐░░░░░░░░░░░▌
-                                                       ▐░▌▐░█▀▀▀▀▀▀▀▀▀ 
-                                              ▄▄▄▄▄▄▄▄▄█░▌▐░█▄▄▄▄▄▄▄▄▄ 
-                                             ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
-                                              ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀ 
-                                                                       """
-
-    if int(credits) > 32:
+    if GODMODE is True:
         middle = """
                                               ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄ 
                                              ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
@@ -1499,6 +1205,17 @@ def Cointing(credits):
                                              ▐░█▄▄▄▄▄▄▄█░▌▐░█▄▄▄▄▄▄▄█░▌
                                              ▐░░░░░░░░░░░▌▐░░░░░░░░░░░▌
                                               ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀ """
+    else:
+
+       nbrlst = list(str(credits).zfill(2))
+       n1 = numbers[int(nbrlst[0])]
+       n2 = numbers[int(nbrlst[1])]
+       l1 = n1.split("\n")
+       l2 = n2.split("\n")
+       ln = max([len(l) for l in l1])
+       f ='{:<'+str(ln)+'}{}{}'
+       middle = "\n".join([f.format(tab,s1,s2) for s1,s2 in zip(l1,l2)])
+
 
     top = """
  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄ 
@@ -2916,6 +2633,7 @@ if 1 == 1:
                         "/usr/bin/padsp snes9x -nostdconf -conf "
                         + str(DirData)
                         + "sneaver.conf -maxaspect -fullscreen -xvideo "
+                        + CHEAT
                         + str(DirChosen)
                         + "/"
                         + str(Container)
@@ -2944,6 +2662,7 @@ if 1 == 1:
                         "/usr/bin/padsp snes9x -nostdconf -conf "
                         + str(DirData)
                         + "sneaver.conf -maxaspect -fullscreen -xvideo "
+                        + CHEAT
                         + str(DirChosen)
                         + "/"
                         + str(Container)
@@ -2964,6 +2683,7 @@ if 1 == 1:
                         "/usr/bin/padsp snes9x -nostdconf -conf "
                         + str(DirData)
                         + "sneaver.conf -maxaspect -fullscreen -xvideo "
+                        + CHEAT
                         + str(DirChosen)
                         + "/"
                         + str(Container)
@@ -2973,6 +2693,7 @@ if 1 == 1:
                     "/usr/bin/padsp snes9x -nostdconf -conf "
                     + str(DirData)
                     + "sneaver.conf -maxaspect -fullscreen -xvideo "
+                    + CHEAT
                     + str(DirChosen)
                     + "/"
                     + str(Container)
@@ -3095,6 +2816,7 @@ if 1 == 1:
                                         "/usr/bin/padsp snes9x -nostdconf -conf "
                                         + str(DirData)
                                         + "sneaver.conf -maxaspect -fullscreen -xvideo "
+                                        + CHEAT
                                         + str(DirChosen)
                                         + "/"
                                         + str(Container)
@@ -3137,6 +2859,7 @@ if 1 == 1:
                                         "/usr/bin/padsp snes9x -nostdconf -conf "
                                         + str(DirData)
                                         + "sneaver.conf -maxaspect -fullscreen -xvideo "
+                                        + CHEAT
                                         + str(DirChosen)
                                         + "/"
                                         + str(Container)
@@ -3198,6 +2921,7 @@ if 1 == 1:
                                     "/usr/bin/padsp snes9x -nostdconf -conf "
                                     + str(DirData)
                                     + "sneaver.conf -maxaspect -fullscreen -xvideo "
+                                    + CHEAT
                                     + str(DirChosen)
                                     + "/"
                                     + str(Container)
@@ -3240,6 +2964,7 @@ if 1 == 1:
                                     "/usr/bin/padsp snes9x -nostdconf -conf "
                                     + str(DirData)
                                     + "sneaver.conf -maxaspect -fullscreen -xvideo "
+                                    + CHEAT
                                     + str(DirChosen)
                                     + "/"
                                     + str(Container)

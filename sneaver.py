@@ -221,14 +221,20 @@ def AutoSaveState():
     if CHECKPOINT >= 10:
         CHECKPOINT = 0
         print("\n!!AutoSaving!!\n")
+        keyboard = Controller()
         if os.path.exists(DirSaves+ str(Container).replace(".smc", ".000").replace(".sfc", ".000")):
              try:
-                 shutil.copy(DirSaves+ str(Container).replace(".smc", ".000").replace(".sfc", ".000"), DirSaves+ str(Container).replace(".smc", ".001").replace(".sfc", ".001"))
+                 shutil.copy(DirSaves+ str(Container).replace(".smc", ".000").replace(".sfc", ".000"), DirSaves+ str(Container).replace(".smc", ".old.000").replace(".sfc", ".old.000"))
+                 os.remove(DirSaves+ str(Container).replace(".smc", ".000").replace(".sfc", ".000"))
              except Exception as e:
                  Pfig("Error: " + str(e))
-        time.sleep(1)
-        keyboard = Controller()
-        keyboard.press(Key.insert)
+
+        while True:
+           if not os.path.exists(DirSaves+ str(Container).replace(".smc", ".000").replace(".sfc", ".000")):
+              keyboard.press(Key.insert)
+              time.sleep(2)
+           else:
+              break
 
 
 #     else:
@@ -2541,7 +2547,7 @@ def CheatBuilder(gamename,gamefolder):
                    Pfig("\n-Found One Cheat File Matching: %s-"%(name))
                    print(RwFile(name,None,"r"))
                    print("\n-To use this file type: yes")
-                   print("\n-To use this file type and don't ask again until sneaver is closed: always")
+                   print("-To use this file type and don't ask again until sneaver is closed: always")
                    print("-To change which cheat code to use type: change")
                    print("-To not use this file type: disable\n")
                    while True:

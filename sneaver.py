@@ -9,6 +9,7 @@ import os, sys, random, subprocess, datetime, re, time, signal, pygame
 ScriptDir = os.path.dirname(os.path.abspath(__file__))
 DirMovies = ScriptDir + "/Movies/"
 DirData = ScriptDir + "/Data/"
+DirCheat = DirData + "cheat/"
 DirGif = DirData + "Gifs/"
 DirSaves = DirData + "savestate/"
 Category = [
@@ -48,7 +49,9 @@ GENRE = False
 SEARCH = False
 ERROR = False
 GODMODE = False
+LASTONE = False
 CHEAT = ""
+CHEATER = False
 NOJP = False
 NOEU = False
 NOUS = False
@@ -107,6 +110,23 @@ def RwFile(filename, data, mode):
                 lines = file.readlines()
                 lines = [l.strip() for l in lines]
                 return lines
+
+
+        if filename == "cheats.bml":
+            if mode == "r":
+                with open(DirCheat + filename, mode) as file:
+                    lines = file.readlines()
+                    lines = "\n".join([l.strip() for l in lines]).split("cartridge")
+                    return lines
+
+        if filename.endswith(".cht"):
+            if mode == "r":
+                with open(DirCheat + filename, mode) as file:
+                    lines = file.read()
+                    return lines
+            if mode == "w":
+                 with open(DirCheat + filename, mode) as file:
+                      file.write(str(data))
 
         if filename == "bad.roms":
             if mode == "r":
@@ -581,7 +601,7 @@ if len(sys.argv) > 1:
         SEARCH = True
         pos = sys.argv.index("--search")
         try:
-            SearchRom = str(sys.argv[pos + 1])
+            SearchRom = str(sys.argv[pos + 1]).replace(" ","-")
         except:
             print("Search Argument is empty.")
             sys.exit(0)
@@ -601,6 +621,9 @@ if len(sys.argv) > 1:
 
     if "--respawn" in sys.argv:
         RESPAWN = True
+    if "--lastone" in sys.argv:
+        LASTONE = True
+
     if "--smartcrash" in sys.argv:
         SMARTCRASH = True
     if "--allowbad" in sys.argv:
@@ -643,13 +666,13 @@ if len(sys.argv) > 1:
 
     if sys.argv[1] == "-h" or sys.argv[1] == "--help":
         print(
-            "\n**Sneaver is a script using snes9x and ffmpeg to play or watch a snes game at random.\n\n**Download a rom put it in its folder inside the Movies directory\n\n**Then launch sneaver ^^\n\n\n**Use :\n\n./sneaver.py --config (To configure your gamepads [Must be used at first launch])  \n\n./sneaver.py --record (For recording a random game.)\n./sneaver.py --replay (For watching all the movies recorded with ffplay.)\n\n./sneaver.py --record --nojp/--jp (Avoid or Only recording Japenese games.)\n./sneaver.py --record --noeu/--eu (Avoid or Only recording European games.)\n./sneaver.py --record --nous/--us (Avoid or Only recording American games.)\n\n./sneaver.py --record/--replay --search [Name] To search for and select a specific rom.\n\n./sneaver.py --record/--replay --genre [GENRE] To select a game by its genre.\n./sneaver.py --record --nolencheck Do not erase recorded videos that are less than 60s\n./sneaver.py --record --respawn Start the rom using its last auto save state.\n./sneaver.py --record --smartcrash Same as --respawn but without asking you after a crash.\n./sneaver.py --record --allowbad Ignore Blacklisted Roms.\n./sneaver.py --flushbad To erase bad roms list .\n\n./sneaver.py --compress To compress recorded videos before quitting.\n\n\nWhile in record mode Sneaver is using a credit system.\nWhen credits reaches Zero you can't play anymore.\nYou are able to gain one coin each hour once sneaver is closed.\nseaver --badkid to remove some coins.\n./sneaver.py --record --godmode (Unlimited coins)\n\n./sneaver.py --record --cheat To enable cheat saved in Datas\cheat\somefile.cht\n\n\nKeep pressing the Exit button on your joypad (configured with --config) multiple times if Snes9x ever crash.\n**Have fun !!\n"
+            "\n**Sneaver is a script using snes9x and ffmpeg to play or watch a snes game at random.\n\n**Download a rom put it in its folder inside the Movies directory\n\n**Then launch sneaver ^^\n\n\n**Use :\n\n./sneaver.py --config (To configure your gamepads [Must be used at first launch])  \n\n./sneaver.py --record (For recording a random game.)\n./sneaver.py --replay (For watching all the movies recorded with ffplay.)\n\n./sneaver.py --record --nojp/--jp (Avoid or Only recording Japenese games.)\n./sneaver.py --record --noeu/--eu (Avoid or Only recording European games.)\n./sneaver.py --record --nous/--us (Avoid or Only recording American games.)\n\n./sneaver.py --record/--replay --search [Name] To search for and select a specific rom.\n\n./sneaver.py --record/--replay --genre [GENRE] To select a game by its genre.\n./sneaver.py --record --nolencheck Do not erase recorded videos that are less than 60s\n./sneaver.py --record --respawn Start the rom using its last auto save state.\n./sneaver.py --record --lastone To launch the last game played normally.\n./sneaver.py --record --smartcrash Same as --respawn but without asking you after a crash.\n./sneaver.py --record --allowbad Ignore Blacklisted Roms.\n./sneaver.py --flushbad To erase bad roms list .\n\n./sneaver.py --compress To compress recorded videos before quitting.\n\n\nWhile in record mode Sneaver is using a credit system.\nWhen credits reaches Zero you can't play anymore.\nYou are able to gain one coin each hour once sneaver is closed.\nseaver --badkid to remove some coins.\n./sneaver.py --record --godmode (Unlimited coins)\n\n./sneaver.py --record --cheat To enable cheat saved in Datas\cheat\somefile.cht\n\n\nKeep pressing the Exit button on your joypad (configured with --config) multiple times if Snes9x ever crash.\n**Have fun !!\n"
         )
         print()
         sys.exit(1)
 else:
     print(
-        "\n**Sneaver is a script using snes9x and ffmpeg to play or watch a snes game at random.\n\n**Download a rom put it in its folder inside the Movies directory\n\n**Then launch sneaver ^^\n\n\n**Use :\n\n./sneaver.py --config (To configure your gamepads [Must be used at first launch]).\n\n./sneaver.py --record (For recording a random game.)\n./sneaver.py --replay (For watching all the movies recorded with ffplay.)\n\n./sneaver.py --record --nojp/--jp (Avoid or Only recording Japenese games.)\n./sneaver.py --record --noeu/--eu (Avoid or Only recording European games.)\n./sneaver.py --record --nous/--us (Avoid or Only recording American games.)\n\n./sneaver.py --record/--replay --genre [GENRE] To select a game by its genre.\n./sneaver.py --record/--replay --search [Name] To search for and select a specific rom.\n\n./sneaver.py --record --nolencheck Do not erase recorded videos that are less than 60s\n./sneaver.py --record --respawn Start the rom using its last auto save state.\n./sneaver.py --record --smartcrash Same as --respawn but without asking you after a crash.\n./sneaver.py --record --allowbad Ignore Blacklisted Roms.\n./sneaver.py --flushbad To erase bad roms list .\n\n./sneaver.py --compress To compress recorded videos before quitting.\n./sneaver.py --record --cheat To enable cheat saved in Datas\cheat\somefile.cht\n\n\n\nWhile in record mode Sneaver is using a credit system.\nWhen credits reaches Zero you can't play anymore.\nYou are able to gain one coin each hour once sneaver is closed.\n\n./sneaver.py -badkid to remove some coins.\n./sneaver.py --record --godmode (Unlimited coins)\n\nKeep pressing the Exit button on your joypad (configured with --config) multiple time if Snes9x ever crash.\n**Have fun !!\n"
+        "\n**Sneaver is a script using snes9x and ffmpeg to play or watch a snes game at random.\n\n**Download a rom put it in its folder inside the Movies directory\n\n**Then launch sneaver ^^\n\n\n**Use :\n\n./sneaver.py --config (To configure your gamepads [Must be used at first launch]).\n\n./sneaver.py --record (For recording a random game.)\n./sneaver.py --replay (For watching all the movies recorded with ffplay.)\n\n./sneaver.py --record --nojp/--jp (Avoid or Only recording Japenese games.)\n./sneaver.py --record --noeu/--eu (Avoid or Only recording European games.)\n./sneaver.py --record --nous/--us (Avoid or Only recording American games.)\n\n./sneaver.py --record/--replay --genre [GENRE] To select a game by its genre.\n./sneaver.py --record/--replay --search [Name] To search for and select a specific rom.\n\n./sneaver.py --record --nolencheck Do not erase recorded videos that are less than 60s\n./sneaver.py --record --respawn Start the rom using its last auto save state.\n./sneaver.py --record --lastone To launch the last game played normally.\n./sneaver.py --record --smartcrash Same as --respawn but without asking you after a crash.\n./sneaver.py --record --allowbad Ignore Blacklisted Roms.\n./sneaver.py --flushbad To erase bad roms list .\n\n./sneaver.py --compress To compress recorded videos before quitting.\n./sneaver.py --record --cheat To enable cheat saved in Datas\cheat\somefile.cht\n\n\n\nWhile in record mode Sneaver is using a credit system.\nWhen credits reaches Zero you can't play anymore.\nYou are able to gain one coin each hour once sneaver is closed.\n\n./sneaver.py -badkid to remove some coins.\n./sneaver.py --record --godmode (Unlimited coins)\n\nKeep pressing the Exit button on your joypad (configured with --config) multiple time if Snes9x ever crash.\n**Have fun !!\n"
     )
     print()
     sys.exit(1)
@@ -1821,7 +1844,7 @@ K00:Insert = QuickSave000
 
 def Rename(name, srcdir):
 
-    badchar = ["(", ")", "[", "!", "]", " ", "_", "--", "'", '"', ",", "&"]
+    badchar = ["(", ")", "[", "!", "]", " ", "_", "--", "'", '"', ",", "&","#"]
     goodchar = "abcdefghijklmnopqrstuvwxyz1234567890"
     mv = False
 
@@ -1861,6 +1884,7 @@ def Rename(name, srcdir):
             .replace("_", "-")
             .replace("'", "-")
             .replace('"', "-")
+            .replace("#","-")
             .replace(",", "-")
             .replace("--", "-")
         )
@@ -2097,7 +2121,7 @@ def RanDef():
                     "\n-%s roms in list matching %s genre-\n"
                     % (len(AllowedRoms), SearchCat)
                 )
-            if RESPAWN is True:
+            if RESPAWN is True or LASTONE is True:
                 FOUNDONE = True
             else:
                 for dirpath, dirnames, filenames in os.walk(DirMovies):
@@ -2227,7 +2251,7 @@ def RanDef():
                 print("-To search both for a genre and a specific game type: both")
                 print("-To play a random game type: random")
                 print("-To respawn from the last game autosave type: respawn")
-                print("-To quit type: quit")
+                print("-To quit type: quit\n")
 
                 while True:
                     answer = input("Please type your choice:")
@@ -2492,6 +2516,128 @@ def LenCheck(DirChosen, newmovie):
     time.sleep(1)
 
 
+def CheatBuilder(gamename,gamefolder):
+
+    global CHEAT
+    global CHEATER
+
+
+    namesave = gamename
+    gamename = gamename.replace(".sfc", "").replace(".smc", "")
+    gamefolder = gamefolder.split("/")[-2].replace("-"," ").lower()
+
+    if CHEATER is True:
+         return
+    else:
+         Pfig("-CHEAT BUILDER-")
+
+    for dirpath, dirnames, filenames in os.walk(DirCheat):
+        for name in filenames:
+            if name.endswith(".cht"):
+                if gamename in name:
+                   Pfig("\n-Found One Cheat File Matching: %s-"%(name))
+                   print(RwFile(name,None,"r"))
+                   print("\n-To use this file type: yes")
+                   print("\n-To use this file type and don't ask again until sneaver is closed: always")
+                   print("-To change which cheat code to use type: change")
+                   print("-To not use this file type: disable\n")
+                   while True:
+                        answer = input("Choice:")
+                        if answer == "yes":
+                                 return
+                        if answer == "always":
+                                 CHEATER = True
+                                 return
+                        elif answer == "change":
+                                break
+                        elif answer == "disable":
+                             CHEAT = "" 
+                             return
+    
+    cheats = RwFile("cheats.bml",None,"r")
+
+    matchingames = {}
+    gameslist = []
+
+    for data in cheats:
+        gamecheats = []
+        gameversion = ""
+        code = ""
+        description = ""
+        data = data.splitlines()
+        for line in data:
+            if "name:" in line:
+                if gameversion == "" and gamefolder in line.lower():
+                        gameversion = line.split("name:")[1]
+            if gameversion != "":
+
+                        if description != "" and code != "":
+                              gamecheats.append((description,code))
+                              description,code="",""
+                        elif "name:" in line:
+                              description = line.split("name:")[1]
+                        elif "code:" in line:
+                              code = line.split("code:")[1]
+
+        if len(gamecheats) > 0:
+           matchingames[gameversion] = gamecheats
+
+    if len(matchingames) == 0:
+            Pfig("\n-DID NOT FIND ANY CHEAT IN DATABASE FOR: %s-"%(gamefolder))
+            CHEAT = ""
+            return
+
+    elif len(matchingames) == 1:
+            Pfig("\n-CHEATS HAS BEEN FOUND IN DATABASE !-")
+    else:
+            Pfig("\n-SEVERAL CHEATS HAS BEEN FOUND IN DATABASE !-\n")
+    for n,key in enumerate(matchingames):
+         print("-To choose : %s Type number: %s "%(key,n))
+         gameslist.append(key)
+
+    print("-Type skip to cancel.")
+    print("\nPlease choose in the list a name which is matching this version:\n\t-",namesave)
+    print()
+    while True:
+        answer = input("Please type your choice:")
+        if answer.isdigit() is True:
+            if int(answer) in range(0, len(matchingames)):
+                choice  = int(answer)
+                break
+        elif answer == "skip":
+                CHEAT = ""
+                return
+
+
+    cheat2write = ""
+
+    print("\n-Type stop to write the file.\n")
+
+    for info in matchingames[gameslist[choice]]:
+        print("\nCheat:",info[0])
+        print("Code:",info[1])
+        while True:
+             useit = input("\nWould you like to use this cheat ? (y/n/stop) :")
+             if useit == "n":
+                 break
+             elif useit == "stop":
+                 if len(cheat2write) > 0:
+                      Pfig("\n-Writing cheat file.\n")
+                      RwFile(gamename+".cht", cheat2write, "w")
+                      return()
+                 else:
+                     Pfig("\n-No cheats to write.\n")
+                     return()
+             elif useit == "y":
+                  cheat2write += "cheat\n  name: %s\n  code: %s\n  enable\n"%(info[0],info[1])
+                  break
+    if len(cheat2write) > 0:
+       Pfig("\n-Writing cheat file.\n")
+       RwFile(gamename+".cht", cheat2write, "w")
+       return()
+    else:
+       Pfig("\n-No cheats to write.\n")
+
 ##PressStart#
 signal.signal(signal.SIGINT, signal_handler)
 
@@ -2585,11 +2731,22 @@ if 1 == 1:
 
             if RESPAWN:
                Container,DirChosen = RwFile("last.played",None,"r")
+             
                if not Container and not DirChosen:
                    print("-Error with file last.played : opening a random rom instead")
                    Container, DirChosen = RanDef()
+            elif LASTONE:
+               Container,DirChosen = RwFile("last.played",None,"r")
+               if not Container and not DirChosen:
+                   print("-Error with file last.played : opening a random rom instead")
+                   Container, DirChosen = RanDef()
+
             else:
                 Container, DirChosen = RanDef()
+
+
+            if CHEAT == "-cheat ":
+               CheatBuilder(Container,DirChosen)
 
             WALLET = int(WALLET)
 
@@ -2608,6 +2765,7 @@ if 1 == 1:
                 if Reslt is False:
                     Pfig("\n-Choosing another random game..-\n")
                     RESPAWN = False
+                    LASTONE = False
                     Container, DirChosen = RanDef()
                     time.sleep(1)
                 else:

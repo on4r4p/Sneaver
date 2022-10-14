@@ -4,7 +4,7 @@ from pyfiglet import Figlet
 from inputs import devices
 from PIL import Image
 from pynput.keyboard import Key, Controller
-import os, sys, random, subprocess, datetime, re, time, signal, pygame
+import os, sys, random,shutil, subprocess, datetime, re, time, signal, pygame
 
 ScriptDir = os.path.dirname(os.path.abspath(__file__))
 DirMovies = ScriptDir + "/Movies/"
@@ -221,11 +221,14 @@ def AutoSaveState():
     if CHECKPOINT >= 10:
         CHECKPOINT = 0
         print("\n!!AutoSaving!!\n")
-        keyboard = Controller()
-
-        keyboard.press(Key.insert)
+        if os.path.exists(DirSaves+ str(Container).replace(".smc", ".000").replace(".sfc", ".000")):
+             try:
+                 shutil.copy(DirSaves+ str(Container).replace(".smc", ".000").replace(".sfc", ".000"), DirSaves+ str(Container).replace(".smc", ".001").replace(".sfc", ".001"))
+             except Exception as e:
+                 Pfig("Error: " + str(e))
         time.sleep(1)
-        keyboard.release(Key.insert)  # just in case
+        keyboard = Controller()
+        keyboard.press(Key.insert)
 
 
 #     else:
@@ -601,7 +604,7 @@ if len(sys.argv) > 1:
         SEARCH = True
         pos = sys.argv.index("--search")
         try:
-            SearchRom = str(sys.argv[pos + 1]).replace(" ","-")
+            SearchRom = str(sys.argv[pos + 1])
         except:
             print("Search Argument is empty.")
             sys.exit(0)
@@ -2139,7 +2142,7 @@ def RanDef():
                                 continue
 
                         if name.endswith(".sfc") or name.endswith(".smc"):
-                            if SearchRom.lower() in name.lower():
+                            if SearchRom.lower().replace(" ","-") in name.lower():
                                 if NOJP == True:
                                     if not "-J-" in name and name not in BADROMS:
                                         romfiles.append(name)
@@ -2207,7 +2210,7 @@ def RanDef():
                     )
 
             for dir in MovLst:
-                if SearchRom.lower() in dir.lower():
+                if SearchRom.lower().replace(" ","-") in dir.lower():
                     FOUNDONE = True
                     currentdir = DirMovies + dir + "/"
                     try:
@@ -2744,7 +2747,6 @@ if 1 == 1:
             else:
                 Container, DirChosen = RanDef()
 
-
             if CHEAT == "-cheat ":
                CheatBuilder(Container,DirChosen)
 
@@ -2757,6 +2759,8 @@ if 1 == 1:
             WaitForMe("ffmpeg")
 
             Pfig("\nSneaver chose to open :" + str(DirChosen))
+
+
 
             time.sleep(1)
 
@@ -2779,7 +2783,7 @@ if 1 == 1:
             Pfig("\n-Recording now-\n" + (newmovie))
 
             if RESPAWN is True:
-#                RESPAWN = False
+
                 if (
                     os.path.exists(
                         DirSaves
@@ -2885,13 +2889,14 @@ if 1 == 1:
                     WALLET = WALLET + 1
                     pkill = subprocess.Popen("pkill ffmpeg", shell=True)
                     time.sleep(1)
-                    pkill = subprocess.Popen("pkill ffmpeg", shell=True)  # just in case
                     WaitForMe("ffmpeg")
-                    Pfig("\n-Changing back Screen Resolution-\n" + str(OLDSCREEN))
+                    pkill = subprocess.Popen("pkill ffmpeg", shell=True)  # just in case
                     LenCheck(DirChosen, newmovie)
                     time.sleep(1)
-                    ScreenResize("revert")
-                    time.sleep(1)  # tmpfix to wait for screen before launchin ffmpeg
+                    if SMARTCRASH is False:
+                          Pfig("\n-Changing back Screen Resolution-\n" + str(OLDSCREEN))
+                          ScreenResize("revert")
+                          time.sleep(1)  # tmpfix to wait for screen before launchin ffmpeg
                     cmd = "xset r on"
                     xset = subprocess.Popen(cmd, shell=True)
                     while True:
@@ -2966,7 +2971,7 @@ if 1 == 1:
                                     ).replace("//","/")
 
                                     Pfig("\n-Recording Screen-\n")
-                                    ScreenResize("change")
+#                                    ScreenResize("change")
                                     print(cmd)
                                     time.sleep(1)
                                     ffmpeg = subprocess.Popen(cmd, shell=True)

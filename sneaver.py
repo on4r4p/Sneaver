@@ -26,7 +26,6 @@ Category = [
     "strategy",
 ]
 
-keyboard = Controller()
 CrashDate = ""
 LastCrashDate = ""
 CrashRom = ""
@@ -219,22 +218,18 @@ def Pfig(txt):
 def AutoSaveState():
     global CHECKPOINT
 
+    Try_Counter = 0
+
     if CHECKPOINT >= 10:
         CHECKPOINT = 0
-
-        print("\n!!AutoSaveState!!\n")
-
+        Pfig("\n-AutoSaving-\n")
         while True:
-            if not os.path.exists(
+            now = str(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
+            if os.path.exists(
                 DirSaves
                 + str(Container).replace(".smc", ".000").replace(".sfc", ".000")
             ):
-                print("\n-AutoSaving-\n")
-                keyboard.press(Key.insert)
-                time.sleep(0.5)
-                keyboard.release(Key.insert)
-                time.sleep(1)
-            else:
+
                 try:
                     shutil.copy(
                         DirSaves
@@ -243,33 +238,82 @@ def AutoSaveState():
                         .replace(".sfc", ".000"),
                         DirSaves
                         + str(Container)
-                        .replace(".smc", ".old.000")
-                        .replace(".sfc", ".old.000"),
+                        .replace(".smc", "." + now + ".000")
+                        .replace(".sfc", "." + now + ".000"),
                     )
+
                     os.remove(
                         DirSaves
                         + str(Container).replace(".smc", ".000").replace(".sfc", ".000")
                     )
                     print(
-                        "-Saved a copy of autosave :",
+                        "-Saved a copy of previous autosave :",
                         DirSaves
                         + str(Container)
-                        .replace(".smc", ".000")
-                        .replace(".sfc", ".000"),
-                        DirSaves
-                        + str(Container)
-                        .replace(".smc", ".old.000")
-                        .replace(".sfc", ".old.000"),
+                        .replace(".smc", "." + now + ".000")
+                        .replace(".sfc", "." + now + ".000"),
                     )
-                    break
                 except Exception as e:
                     Pfig("Error: " + str(e))
-                Pfig("\n-AutoSaved-\n")
-        Pfig("\n-AutoSaved-\n")
 
+                keyboard = Controller()
+                while True:
+                    
+                    if Try_Counter > 60:
+                       Pfig("-Error:Tried 60 times to save current state but failed!-")
+                       return
+                    if not os.path.exists(
+                        DirSaves
+                        + str(Container).replace(".smc", ".000").replace(".sfc", ".000")
+                    ):
+                        keyboard.press(Key.insert)
+                        time.sleep(0.5)
+                        keyboard.release(Key.insert)
+                        time.sleep(0.6)
+                    else:
+                        Pfig("-Done Saving-\n")
+                        return
+                    Try_Counter += 1
 
-#     else:
-#          print("\n\nDebug CHECKPOINT : "+str(CHECKPOINT))
+            else:
+                keyboard = Controller()
+                while True:
+                    if Try_Counter > 60:
+                       Pfig("-Error:Tried 60 times to save current state but failed!-")
+                       return
+                    if not os.path.exists(
+                        DirSaves
+                        + str(Container).replace(".smc", ".000").replace(".sfc", ".000")
+                    ):
+                        keyboard.press(Key.insert)
+                        time.sleep(0.6)
+                        keyboard.release(Key.insert)
+                        time.sleep(0.6)
+                    else:
+                        break
+                    Try_Counter += 1
+                try:
+                        shutil.copy(
+                            DirSaves
+                            + str(Container)
+                            .replace(".smc", ".000")
+                            .replace(".sfc", ".000"),
+                            DirSaves
+                            + str(Container)
+                            .replace(".smc", "." + now + ".000")
+                            .replace(".sfc", "." + now + ".000"),
+                        )
+
+                        print(
+                            "-Saved a copy of previous autosave :",
+                            DirSaves
+                            + str(Container)
+                            .replace(".smc", "." + now + ".000")
+                            .replace(".sfc", "." + now + ".000"),
+                        )
+                except Exception as e:
+                        Pfig("Error: " + str(e))
+                Pfig("-Done Saving-\n")
 
 
 def WaitForMe(process):

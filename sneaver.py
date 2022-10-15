@@ -4,7 +4,7 @@ from pyfiglet import Figlet
 from inputs import devices
 from PIL import Image
 from pynput.keyboard import Key, Controller
-import os, sys, random,shutil, subprocess, datetime, re, time, signal, pygame
+import os, sys, random, shutil, subprocess, datetime, re, time, signal, pygame
 
 ScriptDir = os.path.dirname(os.path.abspath(__file__))
 DirMovies = ScriptDir + "/Movies/"
@@ -25,6 +25,8 @@ Category = [
     "sport",
     "strategy",
 ]
+
+keyboard = Controller()
 CrashDate = ""
 LastCrashDate = ""
 CrashRom = ""
@@ -111,7 +113,6 @@ def RwFile(filename, data, mode):
                 lines = [l.strip() for l in lines]
                 return lines
 
-
         if filename == "cheats.bml":
             if mode == "r":
                 with open(DirCheat + filename, mode) as file:
@@ -125,8 +126,8 @@ def RwFile(filename, data, mode):
                     lines = file.read()
                     return lines
             if mode == "w":
-                 with open(DirCheat + filename, mode) as file:
-                      file.write(str(data))
+                with open(DirCheat + filename, mode) as file:
+                    file.write(str(data))
 
         if filename == "bad.roms":
             if mode == "r":
@@ -158,18 +159,18 @@ def RwFile(filename, data, mode):
                     file.close()
 
         if filename == "last.played" and mode == "r":
-                ctn = None
-                dch = None
-                with open(DirData + filename, mode) as file:
-                    lines = file.readlines()
-                    lines = [l.strip() for l in lines]
-                    for l in lines:
-                        if "DirChosen=" in l:
-                            dch = l.split("DirChosen=")[1]
-                        if "Container=" in l:
-                            ctn = l.split("Container=")[1]
+            ctn = None
+            dch = None
+            with open(DirData + filename, mode) as file:
+                lines = file.readlines()
+                lines = [l.strip() for l in lines]
+                for l in lines:
+                    if "DirChosen=" in l:
+                        dch = l.split("DirChosen=")[1]
+                    if "Container=" in l:
+                        ctn = l.split("Container=")[1]
 
-                    return(ctn,dch)
+                return (ctn, dch)
 
         else:
 
@@ -220,21 +221,51 @@ def AutoSaveState():
 
     if CHECKPOINT >= 10:
         CHECKPOINT = 0
-        print("\n!!AutoSaving!!\n")
-        keyboard = Controller()
-        if os.path.exists(DirSaves+ str(Container).replace(".smc", ".000").replace(".sfc", ".000")):
-             try:
-                 shutil.copy(DirSaves+ str(Container).replace(".smc", ".000").replace(".sfc", ".000"), DirSaves+ str(Container).replace(".smc", ".old.000").replace(".sfc", ".old.000"))
-                 os.remove(DirSaves+ str(Container).replace(".smc", ".000").replace(".sfc", ".000"))
-             except Exception as e:
-                 Pfig("Error: " + str(e))
+
+        print("\n!!AutoSaveState!!\n")
 
         while True:
-           if not os.path.exists(DirSaves+ str(Container).replace(".smc", ".000").replace(".sfc", ".000")):
-              keyboard.press(Key.insert)
-              time.sleep(2)
-           else:
-              break
+            if not os.path.exists(
+                DirSaves
+                + str(Container).replace(".smc", ".000").replace(".sfc", ".000")
+            ):
+                print("\n-AutoSaving-\n")
+                keyboard.press(Key.insert)
+                time.sleep(0.5)
+                keyboard.release(Key.insert)
+                time.sleep(1)
+            else:
+                try:
+                    shutil.copy(
+                        DirSaves
+                        + str(Container)
+                        .replace(".smc", ".000")
+                        .replace(".sfc", ".000"),
+                        DirSaves
+                        + str(Container)
+                        .replace(".smc", ".old.000")
+                        .replace(".sfc", ".old.000"),
+                    )
+                    os.remove(
+                        DirSaves
+                        + str(Container).replace(".smc", ".000").replace(".sfc", ".000")
+                    )
+                    print(
+                        "-Saved a copy of autosave :",
+                        DirSaves
+                        + str(Container)
+                        .replace(".smc", ".000")
+                        .replace(".sfc", ".000"),
+                        DirSaves
+                        + str(Container)
+                        .replace(".smc", ".old.000")
+                        .replace(".sfc", ".old.000"),
+                    )
+                    break
+                except Exception as e:
+                    Pfig("Error: " + str(e))
+                Pfig("\n-AutoSaved-\n")
+        Pfig("\n-AutoSaved-\n")
 
 
 #     else:
@@ -252,7 +283,7 @@ def WaitForMe(process):
                 time.sleep(1)
             except Exception as e:
                 if "returned non-zero exit status 1" in str(e):
-                    #Pfig("-Process %s has ended-" % process)
+                    # Pfig("-Process %s has ended-" % process)
                     return
                 else:
                     Pfig("Error WaitForMe:" + str(e))
@@ -561,6 +592,8 @@ def GetOut():
     if COMPRESS is True:
         CompressVids()
 
+    cmd = "xset r on"
+    xset = subprocess.Popen(cmd, shell=True)
     GifLauncher("Exit")
     Pfig("\n\n==Sneaver exited==\n\n")
     sys.exit(1)
@@ -694,17 +727,20 @@ if RECORD == True and REPLAY == True:
 def BonusCoins():
 
     try:
-       currentdate = datetime.datetime.now()
-       datefile = RwFile("last.closed", None, "r")
-       date_object = datetime.datetime.strptime(str(datefile).strip(), '%Y-%m-%d %H:%M:%S.%f')
-       laps = int((currentdate - date_object).total_seconds()/3600)
-       RwFile("last.closed", currentdate, "w")
-       return(laps)
+        currentdate = datetime.datetime.now()
+        datefile = RwFile("last.closed", None, "r")
+        date_object = datetime.datetime.strptime(
+            str(datefile).strip(), "%Y-%m-%d %H:%M:%S.%f"
+        )
+        laps = int((currentdate - date_object).total_seconds() / 3600)
+        RwFile("last.closed", currentdate, "w")
+        return laps
 
     except Exception as e:
         RwFile("last.closed", currentdate, "w")
         Pfig("Error:" + str(e))
-        return(0)
+        return 0
+
 
 def LoadCoin(mode):
     global WALLET
@@ -753,7 +789,7 @@ def LoadCoin(mode):
             Coins = int(Coins) + Bonus
 
             if Coins > 100:
-               Coins = 99
+                Coins = 99
 
             WALLET = int(Coins)
             return
@@ -1108,8 +1144,8 @@ def InsertCoin(coinsleft):
 
 def Cointing(credits):
 
-    numbers =[
-""" ▄▄▄▄▄▄▄▄▄▄▄ 
+    numbers = [
+        """ ▄▄▄▄▄▄▄▄▄▄▄ 
 ▐░░░░░░░░░░░▌
 ▐░█▀▀▀▀▀▀▀█░▌
 ▐░▌       ▐░▌
@@ -1119,8 +1155,8 @@ def Cointing(credits):
 ▐░▌       ▐░▌
 ▐░█▄▄▄▄▄▄▄█░▌
 ▐░░░░░░░░░░░▌
- ▀▀▀▀▀▀▀▀▀▀▀ """
-,"""    ▄▄▄▄     
+ ▀▀▀▀▀▀▀▀▀▀▀ """,
+        """    ▄▄▄▄     
   ▄█░░░░▌    
  ▐░░▌▐░░▌    
   ▀▀ ▐░░▌    
@@ -1130,8 +1166,8 @@ def Cointing(credits):
      ▐░░▌    
  ▄▄▄▄█░░█▄▄▄ 
 ▐░░░░░░░░░░░▌
- ▀▀▀▀▀▀▀▀▀▀▀ """
-,""" ▄▄▄▄▄▄▄▄▄▄▄ 
+ ▀▀▀▀▀▀▀▀▀▀▀ """,
+        """ ▄▄▄▄▄▄▄▄▄▄▄ 
 ▐░░░░░░░░░░░▌
  ▀▀▀▀▀▀▀▀▀█░▌
           ▐░▌
@@ -1141,8 +1177,8 @@ def Cointing(credits):
 ▐░█▀▀▀▀▀▀▀▀▀ 
 ▐░█▄▄▄▄▄▄▄▄▄ 
 ▐░░░░░░░░░░░▌
- ▀▀▀▀▀▀▀▀▀▀▀ """
-,""" ▄▄▄▄▄▄▄▄▄▄▄ 
+ ▀▀▀▀▀▀▀▀▀▀▀ """,
+        """ ▄▄▄▄▄▄▄▄▄▄▄ 
 ▐░░░░░░░░░░░▌
  ▀▀▀▀▀▀▀▀▀█░▌
           ▐░▌
@@ -1152,8 +1188,8 @@ def Cointing(credits):
           ▐░▌
  ▄▄▄▄▄▄▄▄▄█░▌
 ▐░░░░░░░░░░░▌
- ▀▀▀▀▀▀▀▀▀▀▀ """
-,""" ▄         ▄ 
+ ▀▀▀▀▀▀▀▀▀▀▀ """,
+        """ ▄         ▄ 
 ▐░▌       ▐░▌
 ▐░▌       ▐░▌
 ▐░▌       ▐░▌
@@ -1163,8 +1199,8 @@ def Cointing(credits):
           ▐░▌
           ▐░▌
           ▐░▌
-           ▀ """
-,""" ▄▄▄▄▄▄▄▄▄▄▄ 
+           ▀ """,
+        """ ▄▄▄▄▄▄▄▄▄▄▄ 
 ▐░░░░░░░░░░░▌
 ▐░█▀▀▀▀▀▀▀▀▀ 
 ▐░█▄▄▄▄▄▄▄▄▄ 
@@ -1174,8 +1210,8 @@ def Cointing(credits):
           ▐░▌
  ▄▄▄▄▄▄▄▄▄█░▌
 ▐░░░░░░░░░░░▌
- ▀▀▀▀▀▀▀▀▀▀▀ """
-,""" ▄▄▄▄▄▄▄▄▄▄▄ 
+ ▀▀▀▀▀▀▀▀▀▀▀ """,
+        """ ▄▄▄▄▄▄▄▄▄▄▄ 
 ▐░░░░░░░░░░░▌
 ▐░█▀▀▀▀▀▀▀▀▀ 
 ▐░▌          
@@ -1185,8 +1221,8 @@ def Cointing(credits):
 ▐░▌       ▐░▌
 ▐░█▄▄▄▄▄▄▄█░▌
 ▐░░░░░░░░░░░▌
- ▀▀▀▀▀▀▀▀▀▀▀ """
-,""" ▄▄▄▄▄▄▄▄▄▄▄ 
+ ▀▀▀▀▀▀▀▀▀▀▀ """,
+        """ ▄▄▄▄▄▄▄▄▄▄▄ 
 ▐░░░░░░░░░░░▌
  ▀▀▀▀▀▀▀▀▀█░▌
          ▐░▌ 
@@ -1196,8 +1232,8 @@ def Cointing(credits):
      ▐░▌     
     ▐░▌      
    ▐░▌       
-    ▀        """
-,""" ▄▄▄▄▄▄▄▄▄▄▄ 
+    ▀        """,
+        """ ▄▄▄▄▄▄▄▄▄▄▄ 
 ▐░░░░░░░░░░░▌
 ▐░█▀▀▀▀▀▀▀█░▌
 ▐░▌       ▐░▌
@@ -1208,7 +1244,7 @@ def Cointing(credits):
 ▐░█▄▄▄▄▄▄▄█░▌
 ▐░░░░░░░░░░░▌
  ▀▀▀▀▀▀▀▀▀▀▀ """,
-""" ▄▄▄▄▄▄▄▄▄▄▄ 
+        """ ▄▄▄▄▄▄▄▄▄▄▄ 
 ▐░░░░░░░░░░░▌
 ▐░█▀▀▀▀▀▀▀█░▌
 ▐░▌       ▐░▌
@@ -1218,8 +1254,8 @@ def Cointing(credits):
           ▐░▌
  ▄▄▄▄▄▄▄▄▄█░▌
 ▐░░░░░░░░░░░▌
- ▀▀▀▀▀▀▀▀▀▀▀ """]
-
+ ▀▀▀▀▀▀▀▀▀▀▀ """,
+    ]
 
     tab = "                                               "
     middle = ""
@@ -1239,15 +1275,14 @@ def Cointing(credits):
                                               ▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀ """
     else:
 
-       nbrlst = list(str(credits).zfill(2))
-       n1 = numbers[int(nbrlst[0])]
-       n2 = numbers[int(nbrlst[1])]
-       l1 = n1.split("\n")
-       l2 = n2.split("\n")
-       ln = max([len(l) for l in l1])
-       f ='{:<'+str(ln)+'}{}{}'
-       middle = "\n".join([f.format(tab,s1,s2) for s1,s2 in zip(l1,l2)])
-
+        nbrlst = list(str(credits).zfill(2))
+        n1 = numbers[int(nbrlst[0])]
+        n2 = numbers[int(nbrlst[1])]
+        l1 = n1.split("\n")
+        l2 = n2.split("\n")
+        ln = max([len(l) for l in l1])
+        f = "{:<" + str(ln) + "}{}{}"
+        middle = "\n".join([f.format(tab, s1, s2) for s1, s2 in zip(l1, l2)])
 
     top = """
  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄  ▄▄▄▄▄▄▄▄▄▄▄ 
@@ -1853,7 +1888,7 @@ K00:Insert = QuickSave000
 
 def Rename(name, srcdir):
 
-    badchar = ["(", ")", "[", "!", "]", " ", "_", "--", "'", '"', ",", "&","#"]
+    badchar = ["(", ")", "[", "!", "]", " ", "_", "--", "'", '"', ",", "&", "#"]
     goodchar = "abcdefghijklmnopqrstuvwxyz1234567890"
     mv = False
 
@@ -1893,7 +1928,7 @@ def Rename(name, srcdir):
             .replace("_", "-")
             .replace("'", "-")
             .replace('"', "-")
-            .replace("#","-")
+            .replace("#", "-")
             .replace(",", "-")
             .replace("--", "-")
         )
@@ -2148,7 +2183,7 @@ def RanDef():
                                 continue
 
                         if name.endswith(".sfc") or name.endswith(".smc"):
-                            if SearchRom.lower().replace(" ","-") in name.lower():
+                            if SearchRom.lower().replace(" ", "-") in name.lower():
                                 if NOJP == True:
                                     if not "-J-" in name and name not in BADROMS:
                                         romfiles.append(name)
@@ -2184,7 +2219,6 @@ def RanDef():
                                     DirChosen.append(dirpath + "/")
                                     FOUNDONE = True
 
-
         if REPLAY == True:
             if GENRE is False:
                 MovLst = [i for i in os.listdir(DirMovies)]
@@ -2216,7 +2250,7 @@ def RanDef():
                     )
 
             for dir in MovLst:
-                if SearchRom.lower().replace(" ","-") in dir.lower():
+                if SearchRom.lower().replace(" ", "-") in dir.lower():
                     FOUNDONE = True
                     currentdir = DirMovies + dir + "/"
                     try:
@@ -2273,7 +2307,7 @@ def RanDef():
                         GENRE = False
                         RESPAWN = True
                         Pfig("\n\n-RESPAWN FROM LAST GAME-\n\n")
-                        return(RwFile("last.played",None,"r"))
+                        return RwFile("last.played", None, "r")
 
                     if answer == "search":
                         SEARCH = True
@@ -2300,13 +2334,9 @@ def RanDef():
                     if answer == "both":
                         SEARCH = True
                         GENRE = True
-                        SearchRom = input(
-                            "Please enter a name of rom:"
-                        )
+                        SearchRom = input("Please enter a name of rom:")
                         while True:
-                            SearchCat = input(
-                                "Please enter a genre:"
-                            )
+                            SearchCat = input("Please enter a genre:")
                             if SearchCat not in Category:
                                 print(
                                     "Genre Argument must be one of those keywords:\n%s"
@@ -2477,10 +2507,10 @@ def RanDef():
 
 def LenCheck(DirChosen, newmovie):
 
-    if not os.path.exists(str(DirChosen)+"/"+str(newmovie)):
-         Pfig("\n-File not saved :-")
-         print(str(str(DirChosen)+"/"+str(newmovie)).replace("//","/")+"\n")
-         return()
+    if not os.path.exists(str(DirChosen) + "/" + str(newmovie)):
+        Pfig("\n-File not saved :-")
+        print(str(str(DirChosen) + "/" + str(newmovie)).replace("//", "/") + "\n")
+        return ()
 
     if NOLENCHECK is False:
         cmd = (
@@ -2488,7 +2518,7 @@ def LenCheck(DirChosen, newmovie):
             + str(DirChosen)
             + "/"
             + str(newmovie)
-        ).replace("//","/")
+        ).replace("//", "/")
         ffprobe = subprocess.Popen(
             cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
@@ -2497,15 +2527,23 @@ def LenCheck(DirChosen, newmovie):
         try:
             videolen = int(float(output.decode().strip()))
         except Exception as e:
-            print("Error:%s\nFfprobe output:%s\nFfprobe error:%s" % (str(e), output.decode(),error.decode()))
+            print(
+                "Error:%s\nFfprobe output:%s\nFfprobe error:%s"
+                % (str(e), output.decode(), error.decode())
+            )
             videolen = 60
 
         if videolen >= 60:
             Pfig("\n-Your game session has been recorded with success !-\n")
             Pfig("\n-Saving video path to compress it later-\n")
-            RwFile("compress.video", str(str(DirChosen) + "/" + str(newmovie)).replace("//","/"), "a+")
+            RwFile(
+                "compress.video",
+                str(str(DirChosen) + "/" + str(newmovie)).replace("//", "/"),
+                "a+",
+            )
             print(
-                "Added %s to Data/compress.video" % str(str(DirChosen) + "/" + str(newmovie)).replace("//","/")
+                "Added %s to Data/compress.video"
+                % str(str(DirChosen) + "/" + str(newmovie)).replace("//", "/")
             )
             Pfig("\n-Done-\n")
         else:
@@ -2519,51 +2557,59 @@ def LenCheck(DirChosen, newmovie):
     else:
         Pfig("\n-Your game session has been recorded with success !-\n")
         Pfig("\n-Saving video path to compress it later-\n")
-        RwFile("compress.video", str(str(DirChosen) + "/" + str(newmovie)).replace("//","/"), "a+")
-        print("Added %s to Data/compress.video" % str(str(DirChosen) + "/" + str(newmovie)).replace("//","/"))
+        RwFile(
+            "compress.video",
+            str(str(DirChosen) + "/" + str(newmovie)).replace("//", "/"),
+            "a+",
+        )
+        print(
+            "Added %s to Data/compress.video"
+            % str(str(DirChosen) + "/" + str(newmovie)).replace("//", "/")
+        )
         Pfig("\n-Done-\n")
     time.sleep(1)
 
 
-def CheatBuilder(gamename,gamefolder):
+def CheatBuilder(gamename, gamefolder):
 
     global CHEAT
     global CHEATER
 
-
     namesave = gamename
     gamename = gamename.replace(".sfc", "").replace(".smc", "")
-    gamefolder = gamefolder.split("/")[-2].replace("-"," ").lower()
+    gamefolder = gamefolder.split("/")[-2].replace("-", " ").lower()
 
     if CHEATER is True:
-         return
+        return
     else:
-         Pfig("-CHEAT BUILDER-")
+        Pfig("-CHEAT BUILDER-")
 
     for dirpath, dirnames, filenames in os.walk(DirCheat):
         for name in filenames:
             if name.endswith(".cht"):
                 if gamename in name:
-                   Pfig("\n-Found One Cheat File Matching: %s-"%(name))
-                   print(RwFile(name,None,"r"))
-                   print("\n-To use this file type: yes")
-                   print("-To use this file type and don't ask again until sneaver is closed: always")
-                   print("-To change which cheat code to use type: change")
-                   print("-To not use this file type: disable\n")
-                   while True:
+                    Pfig("\n-Found One Cheat File Matching: %s-" % (name))
+                    print(RwFile(name, None, "r"))
+                    print("\n-To use this file type: yes")
+                    print(
+                        "-To use this file type and don't ask again until sneaver is closed: always"
+                    )
+                    print("-To change which cheat code to use type: change")
+                    print("-To not use this file type: disable\n")
+                    while True:
                         answer = input("Choice:")
                         if answer == "yes":
-                                 return
+                            return
                         if answer == "always":
-                                 CHEATER = True
-                                 return
+                            CHEATER = True
+                            return
                         elif answer == "change":
-                                break
+                            break
                         elif answer == "disable":
-                             CHEAT = "" 
-                             return
-    
-    cheats = RwFile("cheats.bml",None,"r")
+                            CHEAT = ""
+                            return
+
+    cheats = RwFile("cheats.bml", None, "r")
 
     matchingames = {}
     gameslist = []
@@ -2577,75 +2623,81 @@ def CheatBuilder(gamename,gamefolder):
         for line in data:
             if "name:" in line:
                 if gameversion == "" and gamefolder in line.lower():
-                        gameversion = line.split("name:")[1]
+                    gameversion = line.split("name:")[1]
             if gameversion != "":
 
-                        if description != "" and code != "":
-                              gamecheats.append((description,code))
-                              description,code="",""
-                        elif "name:" in line:
-                              description = line.split("name:")[1]
-                        elif "code:" in line:
-                              code = line.split("code:")[1]
+                if description != "" and code != "":
+                    gamecheats.append((description, code))
+                    description, code = "", ""
+                elif "name:" in line:
+                    description = line.split("name:")[1]
+                elif "code:" in line:
+                    code = line.split("code:")[1]
 
         if len(gamecheats) > 0:
-           matchingames[gameversion] = gamecheats
+            matchingames[gameversion] = gamecheats
 
     if len(matchingames) == 0:
-            Pfig("\n-DID NOT FIND ANY CHEAT IN DATABASE FOR: %s-"%(gamefolder))
-            CHEAT = ""
-            return
+        Pfig("\n-DID NOT FIND ANY CHEAT IN DATABASE FOR: %s-" % (gamefolder))
+        CHEAT = ""
+        return
 
     elif len(matchingames) == 1:
-            Pfig("\n-CHEATS HAS BEEN FOUND IN DATABASE !-")
+        Pfig("\n-CHEATS HAS BEEN FOUND IN DATABASE !-")
     else:
-            Pfig("\n-SEVERAL CHEATS HAS BEEN FOUND IN DATABASE !-\n")
-    for n,key in enumerate(matchingames):
-         print("-To choose : %s Type number: %s "%(key,n))
-         gameslist.append(key)
+        Pfig("\n-SEVERAL CHEATS HAS BEEN FOUND IN DATABASE !-\n")
+    for n, key in enumerate(matchingames):
+        print("-To choose : %s Type number: %s " % (key, n))
+        gameslist.append(key)
 
     print("-Type skip to cancel.")
-    print("\nPlease choose in the list a name which is matching this version:\n\t-",namesave)
+    print(
+        "\nPlease choose in the list a name which is matching this version:\n\t-",
+        namesave,
+    )
     print()
     while True:
         answer = input("Please type your choice:")
         if answer.isdigit() is True:
             if int(answer) in range(0, len(matchingames)):
-                choice  = int(answer)
+                choice = int(answer)
                 break
         elif answer == "skip":
-                CHEAT = ""
-                return
-
+            CHEAT = ""
+            return
 
     cheat2write = ""
 
     print("\n-Type stop to write the file.\n")
 
     for info in matchingames[gameslist[choice]]:
-        print("\nCheat:",info[0])
-        print("Code:",info[1])
+        print("\nCheat:", info[0])
+        print("Code:", info[1])
         while True:
-             useit = input("\nWould you like to use this cheat ? (y/n/stop) :")
-             if useit == "n":
-                 break
-             elif useit == "stop":
-                 if len(cheat2write) > 0:
-                      Pfig("\n-Writing cheat file.\n")
-                      RwFile(gamename+".cht", cheat2write, "w")
-                      return()
-                 else:
-                     Pfig("\n-No cheats to write.\n")
-                     return()
-             elif useit == "y":
-                  cheat2write += "cheat\n  name: %s\n  code: %s\n  enable\n"%(info[0],info[1])
-                  break
+            useit = input("\nWould you like to use this cheat ? (y/n/stop) :")
+            if useit == "n":
+                break
+            elif useit == "stop":
+                if len(cheat2write) > 0:
+                    Pfig("\n-Writing cheat file.\n")
+                    RwFile(gamename + ".cht", cheat2write, "w")
+                    return ()
+                else:
+                    Pfig("\n-No cheats to write.\n")
+                    return ()
+            elif useit == "y":
+                cheat2write += "cheat\n  name: %s\n  code: %s\n  enable\n" % (
+                    info[0],
+                    info[1],
+                )
+                break
     if len(cheat2write) > 0:
-       Pfig("\n-Writing cheat file.\n")
-       RwFile(gamename+".cht", cheat2write, "w")
-       return()
+        Pfig("\n-Writing cheat file.\n")
+        RwFile(gamename + ".cht", cheat2write, "w")
+        return ()
     else:
-       Pfig("\n-No cheats to write.\n")
+        Pfig("\n-No cheats to write.\n")
+
 
 ##PressStart#
 signal.signal(signal.SIGINT, signal_handler)
@@ -2739,22 +2791,22 @@ if 1 == 1:
             WaitForMe("ffmpeg")
 
             if RESPAWN:
-               Container,DirChosen = RwFile("last.played",None,"r")
-             
-               if not Container and not DirChosen:
-                   print("-Error with file last.played : opening a random rom instead")
-                   Container, DirChosen = RanDef()
+                Container, DirChosen = RwFile("last.played", None, "r")
+
+                if not Container and not DirChosen:
+                    print("-Error with file last.played : opening a random rom instead")
+                    Container, DirChosen = RanDef()
             elif LASTONE:
-               Container,DirChosen = RwFile("last.played",None,"r")
-               if not Container and not DirChosen:
-                   print("-Error with file last.played : opening a random rom instead")
-                   Container, DirChosen = RanDef()
+                Container, DirChosen = RwFile("last.played", None, "r")
+                if not Container and not DirChosen:
+                    print("-Error with file last.played : opening a random rom instead")
+                    Container, DirChosen = RanDef()
 
             else:
                 Container, DirChosen = RanDef()
 
             if CHEAT == "-cheat ":
-               CheatBuilder(Container,DirChosen)
+                CheatBuilder(Container, DirChosen)
 
             WALLET = int(WALLET)
 
@@ -2765,8 +2817,6 @@ if 1 == 1:
             WaitForMe("ffmpeg")
 
             Pfig("\nSneaver chose to open :" + str(DirChosen))
-
-
 
             time.sleep(1)
 
@@ -2779,7 +2829,16 @@ if 1 == 1:
                     Container, DirChosen = RanDef()
                     time.sleep(1)
                 else:
-                    RwFile("last.played", str("DirChosen="+str(DirChosen) + "\nContainer=" + str(Container)).replace("//","/"), "w")
+                    RwFile(
+                        "last.played",
+                        str(
+                            "DirChosen="
+                            + str(DirChosen)
+                            + "\nContainer="
+                            + str(Container)
+                        ).replace("//", "/"),
+                        "w",
+                    )
                     break
 
             ScreenResize("change")
@@ -2798,7 +2857,7 @@ if 1 == 1:
                     is True
                 ):
                     cmd = (
-                        "/usr/bin/padsp snes9x -nostdconf -conf "
+                        "/usr/bin/padsp snes9x -setrepeat -nostdconf -conf "
                         + str(DirData)
                         + "sneaver.conf -maxaspect -fullscreen -xvideo "
                         + CHEAT
@@ -2811,7 +2870,7 @@ if 1 == 1:
                             + str(Container)
                             .replace(".smc", ".000")
                             .replace(".sfc", ".000")
-                        ).replace("//","/")
+                        ).replace("//", "/")
                     )
                     Pfig("-Respawn using QuickSave.000-")
                     print(str(cmd) + "\n")
@@ -2827,7 +2886,7 @@ if 1 == 1:
                 ):
 
                     cmd = (
-                        "/usr/bin/padsp snes9x -nostdconf -conf "
+                        "/usr/bin/padsp snes9x -setrepeat -nostdconf -conf "
                         + str(DirData)
                         + "sneaver.conf -maxaspect -fullscreen -xvideo "
                         + CHEAT
@@ -2840,7 +2899,7 @@ if 1 == 1:
                             + str(Container)
                             .replace(".smc", ".oops")
                             .replace(".sfc", ".oops")
-                        ).replace("//","/")
+                        ).replace("//", "/")
                     )
                     Pfig("\n-Respawn using AutoSave.oops-\n")
                     print(str(cmd) + "\n")
@@ -2848,24 +2907,24 @@ if 1 == 1:
                 else:
                     Pfig("\n-Error: [RESPAWN] No Auto-Save Found.-\n")
                     cmd = (
-                        "/usr/bin/padsp snes9x -nostdconf -conf "
+                        "/usr/bin/padsp snes9x -setrepeat -nostdconf -conf "
                         + str(DirData)
                         + "sneaver.conf -maxaspect -fullscreen -xvideo "
                         + CHEAT
                         + str(DirChosen)
                         + "/"
                         + str(Container)
-                    ).replace("//","/")
+                    ).replace("//", "/")
             else:
                 cmd = (
-                    "/usr/bin/padsp snes9x -nostdconf -conf "
+                    "/usr/bin/padsp snes9x -setrepeat -nostdconf -conf "
                     + str(DirData)
                     + "sneaver.conf -maxaspect -fullscreen -xvideo "
                     + CHEAT
                     + str(DirChosen)
                     + "/"
                     + str(Container)
-                ).replace("//","/")
+                ).replace("//", "/")
 
             Pfig("\n-Launching Snes9x-\n")
             print(cmd)
@@ -2880,7 +2939,7 @@ if 1 == 1:
                 + str(DirChosen)
                 + "/"
                 + str(newmovie)
-            ).replace("//","/")
+            ).replace("//", "/")
 
             Pfig("\n-Recording Screen-\n")
             print(cmd)
@@ -2900,9 +2959,11 @@ if 1 == 1:
                     LenCheck(DirChosen, newmovie)
                     time.sleep(1)
                     if SMARTCRASH is False:
-                          Pfig("\n-Changing back Screen Resolution-\n" + str(OLDSCREEN))
-                          ScreenResize("revert")
-                          time.sleep(1)  # tmpfix to wait for screen before launchin ffmpeg
+                        Pfig("\n-Changing back Screen Resolution-\n" + str(OLDSCREEN))
+                        ScreenResize("revert")
+                        time.sleep(
+                            1
+                        )  # tmpfix to wait for screen before launchin ffmpeg
                     cmd = "xset r on"
                     xset = subprocess.Popen(cmd, shell=True)
                     while True:
@@ -2974,15 +3035,15 @@ if 1 == 1:
                                         + str(DirChosen)
                                         + "/"
                                         + str(newmovie)
-                                    ).replace("//","/")
+                                    ).replace("//", "/")
 
                                     Pfig("\n-Recording Screen-\n")
-#                                    ScreenResize("change")
+                                    #                                    ScreenResize("change")
                                     print(cmd)
                                     time.sleep(1)
                                     ffmpeg = subprocess.Popen(cmd, shell=True)
                                     cmd = (
-                                        "/usr/bin/padsp snes9x -nostdconf -conf "
+                                        "/usr/bin/padsp snes9x -setrepeat -nostdconf -conf "
                                         + str(DirData)
                                         + "sneaver.conf -maxaspect -fullscreen -xvideo "
                                         + CHEAT
@@ -2995,7 +3056,7 @@ if 1 == 1:
                                             + str(Container)
                                             .replace(".smc", ".000")
                                             .replace(".sfc", ".000")
-                                        ).replace("//","/")
+                                        ).replace("//", "/")
                                     )
                                     Pfig("-Respawn using QuickSave.000-")
                                     print(str(cmd) + "\n")
@@ -3019,13 +3080,13 @@ if 1 == 1:
                                         + str(DirChosen)
                                         + "/"
                                         + str(newmovie)
-                                    ).replace("//","/")
+                                    ).replace("//", "/")
                                     Pfig("\n-Recording Screen-\n")
                                     print(cmd)
                                     ffmpeg = subprocess.Popen(cmd, shell=True)
 
                                     cmd = (
-                                        "/usr/bin/padsp snes9x -nostdconf -conf "
+                                        "/usr/bin/padsp snes9x -setrepeat -nostdconf -conf "
                                         + str(DirData)
                                         + "sneaver.conf -maxaspect -fullscreen -xvideo "
                                         + CHEAT
@@ -3038,7 +3099,7 @@ if 1 == 1:
                                             + str(Container)
                                             .replace(".smc", ".oops")
                                             .replace(".sfc", ".oops")
-                                        ).replace("//","/")
+                                        ).replace("//", "/")
                                     )
                                     Pfig("\n-Respawn using AutoSave.oops-\n")
                                     print(str(cmd) + "\n")
@@ -3078,7 +3139,7 @@ if 1 == 1:
                                     + str(DirChosen)
                                     + "/"
                                     + str(newmovie)
-                                ).replace("//","/")
+                                ).replace("//", "/")
 
                                 ScreenResize("change")
                                 time.sleep(1)
@@ -3087,7 +3148,7 @@ if 1 == 1:
                                 ffmpeg = subprocess.Popen(cmd, shell=True)
 
                                 cmd = (
-                                    "/usr/bin/padsp snes9x -nostdconf -conf "
+                                    "/usr/bin/padsp snes9x -setrepeat -nostdconf -conf "
                                     + str(DirData)
                                     + "sneaver.conf -maxaspect -fullscreen -xvideo "
                                     + CHEAT
@@ -3100,7 +3161,7 @@ if 1 == 1:
                                         + str(Container)
                                         .replace(".smc", ".000")
                                         .replace(".sfc", ".000")
-                                    ).replace("//","/")
+                                    ).replace("//", "/")
                                 )
                                 Pfig("-Respawn using QuickSave.000-")
                                 print(str(cmd) + "\n")
@@ -3124,13 +3185,13 @@ if 1 == 1:
                                     + str(DirChosen)
                                     + "/"
                                     + str(newmovie)
-                                ).replace("//","/")
+                                ).replace("//", "/")
                                 Pfig("\n-Recording Screen-\n")
                                 print(cmd)
                                 ffmpeg = subprocess.Popen(cmd, shell=True)
 
                                 cmd = (
-                                    "/usr/bin/padsp snes9x -nostdconf -conf "
+                                    "/usr/bin/padsp snes9x -setrepeat -nostdconf -conf "
                                     + str(DirData)
                                     + "sneaver.conf -maxaspect -fullscreen -xvideo "
                                     + CHEAT
@@ -3143,7 +3204,7 @@ if 1 == 1:
                                         + str(Container)
                                         .replace(".smc", ".oops")
                                         .replace(".sfc", ".oops")
-                                    ).replace("//","/")
+                                    ).replace("//", "/")
                                 )
                                 Pfig("\n-Respawn using AutoSave.oops-\n")
                                 print(str(cmd) + "\n")

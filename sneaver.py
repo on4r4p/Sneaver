@@ -224,7 +224,7 @@ def AutoSaveState():
         CHECKPOINT = 0
         Pfig("\n-AutoSaving-\n")
         while True:
-            now = str(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
+            now = str(datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
             if os.path.exists(
                 DirSaves
                 + str(Container).replace(".smc", ".000").replace(".sfc", ".000")
@@ -267,9 +267,8 @@ def AutoSaveState():
                         + str(Container).replace(".smc", ".000").replace(".sfc", ".000")
                     ):
                         keyboard.press(Key.insert)
-                        time.sleep(0.5)
+                        time.sleep(2)
                         keyboard.release(Key.insert)
-                        time.sleep(0.6)
                     else:
                         Pfig("-Done Saving-\n")
                         return
@@ -286,9 +285,8 @@ def AutoSaveState():
                         + str(Container).replace(".smc", ".000").replace(".sfc", ".000")
                     ):
                         keyboard.press(Key.insert)
-                        time.sleep(0.6)
+                        time.sleep(2)
                         keyboard.release(Key.insert)
-                        time.sleep(0.6)
                     else:
                         break
                     Try_Counter += 1

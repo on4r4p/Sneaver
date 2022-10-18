@@ -234,6 +234,7 @@ def AutoSaveState():
     global CHECKPOINT
 
     Try_Counter = 0
+    currendate = datetime.datetime.now()
 
     if CHECKPOINT >= 10:
         CHECKPOINT = 0

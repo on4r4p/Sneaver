@@ -237,6 +237,44 @@ def AutoSaveState():
 
     if CHECKPOINT >= 10:
         CHECKPOINT = 0
+
+        RomByDate = []
+        for dirpath, dirnames, filenames in os.walk(DirSaves):
+             RomByDate = [f for f in filenames if Container.replace(".smc","").replace(".sfc","") in f and not ".oops" in f]
+             break
+        if len(RomByDate) > 10:
+             while True:
+                 RomByDate = []
+                 for dirpath, dirnames, filenames in os.walk(DirSaves):
+                     for f in filenames:
+                         if Container.replace(".smc","").replace(".sfc","") in f and not ".oops" in f:
+                             if f.count(".") > 1:
+                                rombirth = f.split(".")[-2]
+                             else:
+                                 rombirth = datetime.datetime.fromtimestamp(os.path.getmtime(DirSaves+str(f))).strftime("%Y-%m-%d-%H-%M-%S")
+                             RomByDate.append((f,rombirth))
+
+                 if len(RomByDate) <= 10:
+                      break
+                 else:
+                     oldest = 0
+                     needle = 0
+                     for n,i in enumerate(RomByDate):
+                         try:
+                            dobj = datetime.datetime.strptime(i[1],"%Y-%m-%d-%H-%M-%S")
+                         except Exception as e:
+                            dobj = datetime.datetime.fromtimestamp(os.path.getmtime(DirSaves+str(i[0]))).strftime("%Y-%m-%d-%H-%M-%S")
+                         if (currendate - dobj).total_seconds() > oldest:
+                               needle = n
+                               oldest = (currendate - dobj).total_seconds()
+
+                     try:
+                          print("-Deleting old autosave:",RomByDate[needle][0])
+                          os.remove(DirSaves+str(RomByDate[needle][0]))
+                     except Exception as e:
+                          print("Error:",str(e))
+
+
         Pfig("\n-AutoSaving-\n")
         while True:
             now = str(datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
@@ -3056,16 +3094,38 @@ if 1 == 1:
             newmovie = str(datetime.datetime.now().strftime("%y-%m-%d-%H-%M")) + ".mkv"
 
             Pfig("\n-Recording now-\n" + (newmovie))
+#datetime.strptime(str(datefile), "%Y-%m-%d %H:%M:%S.%f")
 
             if RESPAWN is True:
 
-                if (
-                    os.path.exists(
-                        DirSaves
-                        + str(Container).replace(".smc", ".000").replace(".sfc", ".000")
-                    )
-                    is True
-                ):
+                currendate = datetime.datetime.now()
+                RomByDate = []
+                for dirpath, dirnames, filenames in os.walk(DirSaves):
+                     for f in filenames:
+                         if Container.replace(".smc","").replace(".sfc","") in f and not ".oops" in f:
+                             if f.count(".") > 1:
+                                rombirth = f.split(".")[-2]
+                             else:
+                                rombirth = datetime.datetime.fromtimestamp(os.path.getmtime("Data/savestate/"+str(f))).strftime("%Y-%m-%d-%H-%M-%S")
+                             RomByDate.append((f,rombirth))
+
+
+                if len(RomByDate) > 0:
+                    youngest = 99999999999999999999999999999999999999999999999999
+                    needle = 0
+                    for n,i in enumerate(RomByDate):
+                       try:
+                           dobj = datetime.datetime.strptime(i[1],"%Y-%m-%d-%H-%M-%S")
+                       except Exception as e:
+                           dobj = datetime.datetime.fromtimestamp(os.path.getmtime(DirSaves+str(i[0]))).strftime("%Y-%m-%d-%H-%M-%S")
+                       if (currendate - dobj).total_seconds() < youngest:
+                              needle = n
+                              youngest = (currendate - dobj).total_seconds()
+#                       print("\nfile:%s\ndate:%s\nsecond:%s"%(i[0],i[1],(currendate - dobj).total_seconds()))
+
+
+#                    print(RomByDate[needle][0])
+
                     cmd = (
                         "/usr/bin/padsp snes9x -setrepeat -nostdconf -conf "
                         + str(DirData)
@@ -3077,12 +3137,10 @@ if 1 == 1:
                         + " -loadsnapshot "
                         + str(
                             DirSaves
-                            + str(Container)
-                            .replace(".smc", ".000")
-                            .replace(".sfc", ".000")
+                            + str(RomByDate[needle][0])
                         ).replace("//", "/")
                     )
-                    Pfig("-Respawn using QuickSave.000-")
+                    Pfig("-Respawn using QuickSave :-")
                     print(str(cmd) + "\n")
 
                 elif (
@@ -3226,15 +3284,35 @@ if 1 == 1:
                                     + ".mkv"
                                 )
 
-                                if (
-                                    os.path.exists(
-                                        DirSaves
-                                        + str(Container)
-                                        .replace(".smc", ".000")
-                                        .replace(".sfc", ".000")
-                                    )
-                                    is True
-                                ):
+                                currendate = datetime.datetime.now()
+                                RomByDate = []
+                                for dirpath, dirnames, filenames in os.walk(DirSaves):
+                                     for f in filenames:
+                                         if Container.replace(".smc","").replace(".sfc","") in f and not ".oops" in f:
+                                             if f.count(".") > 1:
+                                                rombirth = f.split(".")[-2]
+                                             else:
+                                                rombirth = datetime.datetime.fromtimestamp(os.path.getmtime("Data/savestate/"+str(f))).strftime("%Y-%m-%d-%H-%M-%S")
+                                             RomByDate.append((f,rombirth))
+
+
+                                if len(RomByDate) > 0:
+                                    youngest = 99999999999999999999999999999999999999999999999999
+                                    needle = 0
+                                    for n,i in enumerate(RomByDate):
+                                       try:
+                                           dobj = datetime.datetime.strptime(i[1],"%Y-%m-%d-%H-%M-%S")
+                                       except Exception as e:
+                                           dobj = datetime.datetime.fromtimestamp(os.path.getmtime(DirSaves+str(i[0]))).strftime("%Y-%m-%d-%H-%M-%S")
+
+                                       if (currendate - dobj).total_seconds() < youngest:
+                                              needle = n
+                                              youngest = (currendate - dobj).total_seconds()
+                                 #      print("\nfile:%s\ndate:%s\nsecond:%s"%(i[0],i[1],(currendate - dobj).total_seconds()))
+
+
+                                  #  print("\nyoungest file:")
+                                    print(RomByDate[needle][0])
 
                                     cmd = (
                                         "padsp ffmpeg -y -loglevel error -f pulse -ar 32000 -i "
@@ -3263,12 +3341,10 @@ if 1 == 1:
                                         + " -loadsnapshot "
                                         + str(
                                             DirSaves
-                                            + str(Container)
-                                            .replace(".smc", ".000")
-                                            .replace(".sfc", ".000")
+                                            + str(RomByDate[needle][0])
                                         ).replace("//", "/")
                                     )
-                                    Pfig("-Respawn using QuickSave.000-")
+                                    Pfig("-Respawn using QuickSave-")
                                     print(str(cmd) + "\n")
                                     sneaver = subprocess.Popen(cmd, shell=True)
                                 elif (

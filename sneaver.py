@@ -313,8 +313,9 @@ def AutoSaveState():
                 keyboard = Controller()
                 while True:
 
-                    if Try_Counter > 60:
-                        Pfig("-Error:Tried 60 times to save current state but failed!-")
+                    if Try_Counter > 5:
+                        Pfig("-Error:Tried 5 times to save current state but failed!-")
+                        CHECKPOINT = 9
                         return
                     if not os.path.exists(
                         DirSaves
@@ -335,8 +336,9 @@ def AutoSaveState():
             else:
                 keyboard = Controller()
                 while True:
-                    if Try_Counter > 60:
-                        Pfig("-Error:Tried 60 times to save current state but failed!-")
+                    if Try_Counter > 5:
+                        Pfig("-Error:Tried 5 times to save current state but failed!-")
+                        CHECKPOINT = 9
                         return
                     if not os.path.exists(
                         DirSaves

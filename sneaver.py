@@ -716,7 +716,7 @@ def GetOut():
 
 if len(sys.argv) > 1:
 
-    goodargs = ["--nojp","--noeu","--nous","--jp","--eu","--us","--godmode","--record","--replay","--cheat ","--config","--nolencheck","--search","--genre","--respawn","--smartcrash","--allowbad","--compress","--badkid"]
+    goodargs = ["--nojp","--noeu","--nous","--jp","--eu","--us","--godmode","--record","--replay","--cheat","--config","--nolencheck","--search","--genre","--respawn","--smartcrash","--allowbad","--compress","--badkid"]
 
     for a in sys.argv:
         if a.startswith("--"):

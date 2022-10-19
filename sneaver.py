@@ -313,21 +313,22 @@ def AutoSaveState():
                 keyboard = Controller()
                 while True:
 
-                    if Try_Counter > 5:
-                        Pfig("-Error:Tried 5 times to save current state but failed!-")
-                        CHECKPOINT = 9
+                    if Try_Counter > 20:
+                        Pfig("-Error:Tried 20 times to save current state but failed!-")
+                        ERROR = True
+                        pkill = subprocess.Popen("pkill snes9x", shell=True)
                         return
                     if not os.path.exists(
                         DirSaves
                         + str(Container).replace(".smc", ".000").replace(".sfc", ".000")
                     ):
                         keyboard.press(Key.insert)
-                        keyboard.press(Key.insert)
-                        keyboard.press(Key.insert)
-                        keyboard.press(Key.insert)
-                        keyboard.press(Key.insert)
                         time.sleep(1)
                         keyboard.release(Key.insert)
+                        time.sleep(1)
+                        keyboard.press(Key.end)
+                        time.sleep(1)
+                        keyboard.release(Key.end)
                     else:
                         Pfig("-Done Saving-\n")
                         return
@@ -336,21 +337,22 @@ def AutoSaveState():
             else:
                 keyboard = Controller()
                 while True:
-                    if Try_Counter > 5:
-                        Pfig("-Error:Tried 5 times to save current state but failed!-")
-                        CHECKPOINT = 9
+                    if Try_Counter > 20:
+                        Pfig("-Error:Tried 20 times to save current state but failed!-")
+                        ERROR = True
+                        pkill = subprocess.Popen("pkill snes9x", shell=True)
                         return
                     if not os.path.exists(
                         DirSaves
                         + str(Container).replace(".smc", ".000").replace(".sfc", ".000")
                     ):
                         keyboard.press(Key.insert)
-                        keyboard.press(Key.insert)
-                        keyboard.press(Key.insert)
-                        keyboard.press(Key.insert)
-                        keyboard.press(Key.insert)
                         time.sleep(1)
                         keyboard.release(Key.insert)
+                        time.sleep(1)
+                        keyboard.press(Key.end)
+                        time.sleep(1)
+                        keyboard.release(Key.end)
                     else:
                         break
                     Try_Counter += 1
@@ -1984,6 +1986,7 @@ J01:B"""
 
 K00:Escape = ExitEmu
 K00:Insert = QuickSave000
+K00:Enter = SoftReset
 
 #Full config list :  https://github.com/snes9xgit/snes9x/blob/master/unix/snes9x.conf.default
 """
@@ -3225,7 +3228,6 @@ if 1 == 1:
                     WALLET = WALLET + 1
                     pkill = subprocess.Popen("pkill ffmpeg", shell=True)
                     time.sleep(1)
-                    WaitForMe("ffmpeg")
                     pkill = subprocess.Popen("pkill ffmpeg", shell=True)  # just in case
                     LenCheck(DirChosen, newmovie)
                     time.sleep(1)

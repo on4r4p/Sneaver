@@ -50,6 +50,7 @@ IGNOREBAD = False
 GENRE = False
 SEARCH = False
 ERROR = False
+SAVERROR = False
 GODMODE = False
 LASTROM = False
 CHEAT = ""
@@ -232,6 +233,8 @@ def Pfig(txt):
 
 def AutoSaveState():
     global CHECKPOINT
+    global ERROR
+    global SAVERROR
 
     Try_Counter = 0
     currendate = datetime.datetime.now()
@@ -316,6 +319,7 @@ def AutoSaveState():
                     if Try_Counter > 20:
                         Pfig("-Error:Tried 20 times to save current state but failed!-")
                         ERROR = True
+                        SAVERROR = True
                         pkill = subprocess.Popen("pkill snes9x", shell=True)
                         return
                     if not os.path.exists(
@@ -340,6 +344,7 @@ def AutoSaveState():
                     if Try_Counter > 20:
                         Pfig("-Error:Tried 20 times to save current state but failed!-")
                         ERROR = True
+                        SAVERROR = True
                         pkill = subprocess.Popen("pkill snes9x", shell=True)
                         return
                     if not os.path.exists(
@@ -710,6 +715,14 @@ def GetOut():
 ##ARGH!
 
 if len(sys.argv) > 1:
+
+    goodargs = ["--nojp","--noeu","--nous","--jp","--eu","--us","--godmode","--record","--replay","--cheat ","--config","--nolencheck","--search","--genre","--respawn","--smartcrash","--allowbad","--compress","--badkid"]
+
+    for a in sys.argv:
+        if a.startswith("--"):
+            if a not in goodargs:
+               print("-Bad argument : ",a)
+               sys.exit(0)
 
     if "--nojp" in sys.argv:
         NOJP = True
@@ -3231,6 +3244,13 @@ if 1 == 1:
                     pkill = subprocess.Popen("pkill ffmpeg", shell=True)  # just in case
                     LenCheck(DirChosen, newmovie)
                     time.sleep(1)
+                    if SAVERROR is True:
+                        cmd = "xset r on"
+                        xset = subprocess.Popen(cmd, shell=True)
+                        Pfig("\n-Changing back Screen Resolution-\n" + str(OLDSCREEN))
+                        ScreenResize("revert")
+                        Pfig("\n-!!AutoSave not Working Correctly!!-\n")
+                        GetOut()
                     if SMARTCRASH is False:
                         Pfig("\n-Changing back Screen Resolution-\n" + str(OLDSCREEN))
                         ScreenResize("revert")

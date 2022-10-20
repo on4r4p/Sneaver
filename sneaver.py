@@ -217,7 +217,7 @@ def Segfault():
             print("SEGFAULTLIST:", SEGFAULTLIST)
             Snesisdead = True
         if len(SEGFAULTLIST) > 0:
-            LASTSEGFAULT = SEGFAULTLIST[-1]
+            tLASTSEGFAULT = SEGFAULTLIST[-1]
 
     except Exception as e:
         Pfig("digital", "Error LASTSEGFAULT", e)
@@ -230,6 +230,16 @@ def Pfig(txt):
     print(Fig.renderText(txt))
     return
 
+def Pkill(proc):
+
+   while True:
+        pkill = subprocess.Popen("pkill %s"%(proc), shell=True)
+        time.sleep(1)
+
+        if IsAlive(proc) is False:
+                Pfig("-Process %s ended successfully-"%(proc))
+                return
+
 
 def AutoSaveState():
     global CHECKPOINT
@@ -238,6 +248,7 @@ def AutoSaveState():
 
     Try_Counter = 0
     currendate = datetime.datetime.now()
+    SAVERROR = False
 
     if CHECKPOINT >= 10:
         CHECKPOINT = 0
@@ -280,6 +291,7 @@ def AutoSaveState():
 
 
         Pfig("\n-AutoSaving-\n")
+        switch = False
         while True:
             now = str(datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
             if os.path.exists(
@@ -316,23 +328,33 @@ def AutoSaveState():
                 keyboard = Controller()
                 while True:
 
+
+
+                    if not IsAlive("snes9x"):
+                           Pfig("-Process snes9x has ended while saving-")
+                           ERROR = True
+                           return
+
                     if Try_Counter > 20:
-                        Pfig("-Error:Tried 20 times to save current state but failed!-")
+                        Pfig("-Error1:Tried 20 times to save current state but failed!-")
                         ERROR = True
                         SAVERROR = True
-                        pkill = subprocess.Popen("pkill snes9x", shell=True)
+                        Pkill("snes9x")
                         return
                     if not os.path.exists(
                         DirSaves
                         + str(Container).replace(".smc", ".000").replace(".sfc", ".000")
                     ):
-                        keyboard.press(Key.insert)
-                        time.sleep(1)
-                        keyboard.release(Key.insert)
-                        time.sleep(1)
-                        keyboard.press(Key.end)
-                        time.sleep(1)
-                        keyboard.release(Key.end)
+                        if switch is False:
+                           keyboard.press(Key.insert)
+                           time.sleep(1)
+                           keyboard.release(Key.insert)
+                           switch = True
+                        else:
+                            keyboard.press(Key.end)
+                            time.sleep(1)
+                            keyboard.release(Key.end)
+                            switch = False
                     else:
                         Pfig("-Done Saving-\n")
                         return
@@ -341,23 +363,34 @@ def AutoSaveState():
             else:
                 keyboard = Controller()
                 while True:
+                    if IsAlive("snes9x") is False:
+                           Pfig("-Process snes9x has ended while saving-")
+                           ERROR = True
+                           return
+
                     if Try_Counter > 20:
-                        Pfig("-Error:Tried 20 times to save current state but failed!-")
+                        Pfig("-Error2:Tried 20 times to save current state but failed!-")
                         ERROR = True
                         SAVERROR = True
-                        pkill = subprocess.Popen("pkill snes9x", shell=True)
+                        Pkill("snes9x")
                         return
                     if not os.path.exists(
                         DirSaves
                         + str(Container).replace(".smc", ".000").replace(".sfc", ".000")
                     ):
-                        keyboard.press(Key.insert)
-                        time.sleep(1)
-                        keyboard.release(Key.insert)
-                        time.sleep(1)
-                        keyboard.press(Key.end)
-                        time.sleep(1)
-                        keyboard.release(Key.end)
+
+
+                        if switch is False:
+                           keyboard.press(Key.insert)
+                           time.sleep(1)
+                           keyboard.release(Key.insert)
+                           switch = True
+                        else:
+                            keyboard.press(Key.end)
+                            time.sleep(1)
+                            keyboard.release(Key.end)
+                            switch = False
+
                     else:
                         break
                     Try_Counter += 1
@@ -384,6 +417,13 @@ def AutoSaveState():
                     Pfig("Error: " + str(e))
                 Pfig("-Done Saving-\n")
 
+def IsAlive(proc):
+     try:
+         checkproc = int(subprocess.check_output(["pidof", "-s", proc]))
+         return(True)
+     except Exception as e:
+         if "returned non-zero exit status 1" in str(e):
+             return(False)
 
 def WaitForMe(process):
 
@@ -391,66 +431,52 @@ def WaitForMe(process):
     global CHECKPOINT
     if process != "snes9x":
         while True:
-            try:
-                checkproc = int(subprocess.check_output(["pidof", "-s", process]))
+            if IsAlive(process) is False:
+                return
+            else:
                 time.sleep(1)
-            except Exception as e:
-                if "returned non-zero exit status 1" in str(e):
-                    # Pfig("-Process %s has ended-" % process)
-                    return
-                else:
-                    Pfig("Error WaitForMe:" + str(e))
-
     else:
         while True:
+            if IsAlive("snes9x") is False:
+                  ERROR = False
+                  return
             try:
-                checksnes9x = int(subprocess.check_output(["pidof", "-s", process]))
-                time.sleep(1)
-                try:
 
                     snesfault = Segfault()
                     if snesfault == True:
                         Pfig("Segfault found :" + str(LASTSEGFAULT))
                         ERROR = True
-                        try:
-                            time.sleep(1)
-                            checkproc = int(
-                                subprocess.check_output(["pidof", "-s", process])
-                            )
-                            pfig("-Snes9x still alive...-")
-                            ERROR = False
-                        except Exception as e:
-                            Pfig("-Snes9x already dead..-")
+                        if IsAlive("snes9x") is False:
+                             pfig("-But snes9x is still alive...-")
+                             ERROR = False
+                        else:
+                            Pfig("-And Snes9x is already dead..-")
                             ERROR = True
-                            pkill = subprocess.Popen("pkill snes9x", shell=True)
+                            Pkill("snes9x")
                             return
                     else:
                         ERROR = False
-                except Exception as e:
+            except Exception as e:
                     Pfig("Segfault Error:" + str(e))
                     ERROR = True
-                try:
+            try:
                     crashbandicoot = ManualExit()
                     if crashbandicoot == True:
                         Pfig("\nCaught Manual Exit.\n")
                         ERROR = True
-                        pkill = subprocess.Popen("pkill snes9x", shell=True)
+                        Pkill("snes9x")
+                        time.sleep(1)
+                        Pkill("ffmpeg")
                         return
                     else:
                         ERROR = False
 
-                except Exception as e:
+            except Exception as e:
                     Pfig("ManualExit Error:" + str(e))
 
-                CHECKPOINT = CHECKPOINT + 1
-                AutoSaveState()
+            CHECKPOINT = CHECKPOINT + 1
+            AutoSaveState()
 
-            except Exception as e:
-                if "returned non-zero exit status 1" in str(e):
-                    ERROR = False
-                    return
-                else:
-                    Pfig("Proc/Status Error:" + str(e))
 
 
 def GifLauncher(mode):
@@ -671,16 +697,12 @@ def CompressVids():
             if "No such file or directory" in fout:
                 Pfig("!!!!!!!!!!!\nError while Trying to Open File!!\n!!!!!!!!!!!\n")
                 ffmpeg.terminate()
-                cmd = "pkill ffmpeg"
-                pkill = subprocess.Popen(cmd, shell=True)
                 time.sleep(1)
-            WaitForMe("ffmpeg")
-
+            Pkill("ffmpeg")
             time.sleep(1)
 
             if KILLLOAD != "":
-                cmd = "pkill " + KILLLOAD
-                pkill = subprocess.Popen(cmd, shell=True)
+                Pkill(KILLLOAD)
                 KILLLOAD = ""
 
             Pfig("\n-Finished-\n")
@@ -707,6 +729,8 @@ def GetOut():
 
     cmd = "xset r on"
     xset = subprocess.Popen(cmd, shell=True)
+    Pkill("ffmpeg")
+    Pkill("snes9x")
     GifLauncher("Exit")
     Pfig("\n\n==Sneaver exited==\n\n")
     sys.exit(1)
@@ -1515,16 +1539,8 @@ def ManualExit():
         while Loop <= 200:
             events = pygame.event.get()
             for event in events:
-
-                try:
-                    checksnes9x = int(
-                        subprocess.check_output(["pidof", "-s", "snes9x"])
-                    )
-                except Exception as e:
-                    if "returned non-zero exit status 1" in str(e):
-                        return False
-                    else:
-                        Pfig("Proc/Status Error:" + str(e))
+                if IsAlive("snes9x") is False:
+                   return(False)
 
                 if event.type == pygame.JOYBUTTONUP:
                     if str(event.button) == str(Exit):
@@ -1999,6 +2015,7 @@ J01:B"""
 
 K00:Escape = ExitEmu
 K00:Insert = QuickSave000
+K00:End = QuickSave000
 K00:Enter = SoftReset
 
 #Full config list :  https://github.com/snes9xgit/snes9x/blob/master/unix/snes9x.conf.default
@@ -2700,8 +2717,8 @@ def CheatBuilder(gamename, gamefolder):
     namesave = gamename
     foldersave = gamefolder
     gamename = gamename.replace(".sfc", "").replace(".smc", "")
-    gamefoldercase = gamefolder.split("/")[-2].replace("-", " ")
-    gamefolder = gamefolder.split("/")[-2].replace("-", " ").lower()
+    gamefoldercase = os.path.basename(os.path.normpath(gamefolder)).replace("-", " ")
+    gamefolder = os.path.basename(os.path.normpath(gamefolder)).replace("-", " ").lower()
 
     if CHEATER is True:
         return
@@ -3054,8 +3071,8 @@ if 1 == 1:
         time.sleep(1)
         LoadCoin("firstload")
         while True:
-            WaitForMe("snes9x")
-            WaitForMe("ffmpeg")
+            Pkill("snes9x")
+            Pkill("ffmpeg")
 
             if RESPAWN:
                 Container, DirChosen = RwFile("last.played", None, "r")
@@ -3071,9 +3088,6 @@ if 1 == 1:
 
             else:
                 Container, DirChosen = RanDef()
-
-            if CHEAT == "-cheat ":
-                CheatBuilder(Container, DirChosen)
 
             WALLET = int(WALLET)
 
@@ -3108,12 +3122,18 @@ if 1 == 1:
                     )
                     break
 
+
+            if CHEAT == "-cheat ":
+                print("Container:",Container)
+                print("DirChosen:",DirChosen)
+                CheatBuilder(Container, DirChosen)
+
             ScreenResize("change")
             time.sleep(1)
             newmovie = str(datetime.datetime.now().strftime("%y-%m-%d-%H-%M")) + ".mkv"
 
+
             Pfig("\n-Recording now-\n" + (newmovie))
-#datetime.strptime(str(datefile), "%Y-%m-%d %H:%M:%S.%f")
 
             if RESPAWN is True:
 
@@ -3239,9 +3259,8 @@ if 1 == 1:
                     GifLauncher("Error")
                     time.sleep(1)
                     WALLET = WALLET + 1
-                    pkill = subprocess.Popen("pkill ffmpeg", shell=True)
+                    Pkill("ffmpeg")
                     time.sleep(1)
-                    pkill = subprocess.Popen("pkill ffmpeg", shell=True)  # just in case
                     LenCheck(DirChosen, newmovie)
                     time.sleep(1)
                     if SAVERROR is True:
@@ -3541,8 +3560,7 @@ if 1 == 1:
                     ERROR = False
                 else:
                     break
-            pkill = subprocess.Popen("pkill ffmpeg", shell=True)
-            WaitForMe("ffmpeg")
+            Pkill("ffmpeg")
             time.sleep(1)
 
             Pfig("\n-Changing back Screen Resolution-\n" + str(OLDSCREEN))

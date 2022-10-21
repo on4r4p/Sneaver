@@ -1619,6 +1619,8 @@ def PressStart(gamename):
             for event in events:
                 if event.type == pygame.JOYBUTTONUP:
                     if str(event.button) == str(Start):
+                        if CHEAT == "-cheat ":
+                           CheatBuilder(Container, DirChosen)
                         GifLauncher("NewGame")
                         return True
                     if str(event.button) == str(Select):
@@ -1627,6 +1629,8 @@ def PressStart(gamename):
                         return False
                 elif event.type == pygame.JOYBUTTONDOWN:
                     if str(event.button) == str(Start):
+                        if CHEAT == "-cheat ":
+                           CheatBuilder(Container, DirChosen)
                         GifLauncher("NewGame")
                         return True
                     if str(event.button) == str(Select):
@@ -2016,7 +2020,7 @@ J01:B"""
 K00:Escape = ExitEmu
 K00:Insert = QuickSave000
 K00:End = QuickSave000
-K00:Enter = SoftReset
+K00:KP_Enter = SoftReset
 
 #Full config list :  https://github.com/snes9xgit/snes9x/blob/master/unix/snes9x.conf.default
 """
@@ -3122,11 +3126,6 @@ if 1 == 1:
                     )
                     break
 
-
-            if CHEAT == "-cheat ":
-                print("Container:",Container)
-                print("DirChosen:",DirChosen)
-                CheatBuilder(Container, DirChosen)
 
             ScreenResize("change")
             time.sleep(1)
